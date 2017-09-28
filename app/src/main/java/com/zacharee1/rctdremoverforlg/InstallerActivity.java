@@ -1,0 +1,322 @@
+package com.zacharee1.rctdremoverforlg;
+
+import android.Manifest;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
+import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.zacharee1.rctdremoverforlg.misc.SuUtils;
+import com.zacharee1.rctdremoverforlg.misc.Utils;
+
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Date;
+
+public class InstallerActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.layout_checkroot);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (SuUtils.testSudo()) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            setup();
+                        }
+                    });
+                } else {
+                    finish();
+                    Toast.makeText(InstallerActivity.this, getResources().getString(R.string.need_root), Toast.LENGTH_LONG).show();
+                }
+            }
+        }).start();
+    }
+
+    private void setup() {
+        if (checkCallingOrSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE }, 10);
+        } else {
+            setContentView(R.layout.layout_install_aik);
+            installAik();
+        }
+    }
+
+    public void installAik() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Looper.prepare();
+
+                AssetManager assetManager = getAssets();
+                final String aik = "AIK.zip";
+
+                InputStream in;
+                FileOutputStream out;
+
+                try {
+                    in = assetManager.open(aik);
+                    String dest = Environment.getExternalStorageDirectory().getAbsolutePath() + "/AndroidImageKitchen/";
+                    File outDir = new File(dest);
+                    createDir(outDir);
+                    File outFile = new File(dest, aik);
+                    out = new FileOutputStream(outFile);
+
+                    copyFile(in, out);
+
+                    in.close();
+                    in = null;
+
+                    out.flush();
+                    out.close();
+                    out = null;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    Process aikProc = Runtime.getRuntime().exec("aik");
+
+                    DataOutputStream outputStream = new DataOutputStream(aikProc.getOutputStream());
+
+                    outputStream.writeBytes("exit\n");
+                    outputStream.flush();
+
+                    aikProc.waitFor();
+                    if (aikProc.exitValue() == 0) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.e("TAG", "Setting ContentView");
+                                setContentView(R.layout.activity_installer);
+
+                                TextView appBy = findViewById(R.id.app_made_by);
+                                TextView aikBy = findViewById(R.id.aik_by);
+
+                                appBy.setMovementMethod(LinkMovementMethod.getInstance());
+                                aikBy.setMovementMethod(LinkMovementMethod.getInstance());
+                            }
+                        });
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+
+                    try {
+                        SuUtils.sudo("echo '--update_package=/sdcard/0/AndroidImageKitchen/AIK.zip' >> /cache/recovery/command");
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            new AlertDialog.Builder(InstallerActivity.this)
+                                    .setTitle(getResources().getString(R.string.reboot))
+                                    .setMessage(getResources().getString(R.string.install_aik))
+                                    .setPositiveButton(getResources().getString(R.string.yes), new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            try {
+                                                SuUtils.sudo("reboot recovery");
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    })
+                                    .setNegativeButton(getResources().getString(R.string.no), new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            finish();
+                                        }
+                                    })
+                                    .show();
+                        }
+                    });
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    public void handlePatch(View v) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Looper.prepare();
+
+                AssetManager assetManager = getAssets();
+                String aik = "executemod.sh";
+
+                InputStream in;
+                FileOutputStream out;
+
+                try {
+                    in = assetManager.open(aik);
+                    String dest = Environment.getExternalStorageDirectory().getAbsolutePath() + "/AndroidImageKitchen/";
+                    File outDir = new File(dest);
+                    createDir(outDir);
+                    File outFile = new File(dest, aik);
+                    out = new FileOutputStream(outFile);
+
+                    copyFile(in, out);
+
+                    in.close();
+                    in = null;
+
+                    out.flush();
+                    out.close();
+                    out = null;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    final String executResult = SuUtils.sudoForResult("cp /sdcard/AndroidImageKitchen/executemod.sh /data/local/AIK-mobile/.",
+                            "aik",
+                            "chmod 0755 executemod.sh",
+                            "./executemod.sh");
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            new AlertDialog.Builder(InstallerActivity.this)
+                                    .setTitle(getResources().getString(R.string.done))
+                                    .setMessage(Html.fromHtml("<b>" + getResources().getString(R.string.patch_done) + "</b>" +
+                                            "<br><br>" +
+                                            "<b>" + getResources().getString(R.string.log) + "</b>" +
+                                            "<br><br>" +
+                                            executResult.replace("\n", "<br>")))
+                                    .setPositiveButton(getResources().getString(R.string.ok), null)
+                                    .show();
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    public void handleFlash(View v) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Looper.prepare();
+
+                try {
+                    SuUtils.sudo("dd if=/sdcard/AndroidImageKitchen/boot.img of=/dev/block/bootdevice/by-name/boot");
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            new AlertDialog.Builder(InstallerActivity.this)
+                                    .setTitle(getResources().getString(R.string.flashed))
+                                    .setMessage(getResources().getString(R.string.flash_done))
+                                    .setPositiveButton(getResources().getString(R.string.reboot), new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            try {
+                                                SuUtils.sudo("reboot");
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    })
+                                    .setNegativeButton(getResources().getString(R.string.later), null)
+                                    .show();
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    public void handleBackup(View v) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    SuUtils.sudo("mkdir /sdcard/AndroidImageKitchen/Backups/",
+                            "dd if=/dev/block/bootdevice/by-name/boot of=/sdcard/AndroidImageKitchen/Backups/" + new Date().toString().replace(" ", "_") + ".img");
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            new AlertDialog.Builder(InstallerActivity.this)
+                                    .setTitle(getResources().getString(R.string.backup))
+                                    .setMessage(getResources().getString(R.string.backup_done))
+                                    .setPositiveButton(getResources().getString(R.string.ok), null)
+                                    .show();
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        for (int i = 0; i < permissions.length; i++) {
+            String perm = permissions[i];
+            int result = grantResults[i];
+
+            if (perm.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) && result == PackageManager.PERMISSION_GRANTED) {
+                installAik();
+            } else {
+                finish();
+            }
+        }
+    }
+
+    private void copyFile(InputStream in, OutputStream out) throws IOException {
+        byte[] buffer = new byte[1024];
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            out.write(buffer, 0, read);
+        }
+    }
+
+    public void createDir(File dir) throws IOException {
+        if (dir.exists())
+        {
+            if (!dir.isDirectory())
+            {
+                throw new IOException("Can't create directory, a file is in the way");
+            }
+        } else
+        {
+            dir.mkdirs();
+            if (!dir.isDirectory())
+            {
+                throw new IOException("Unable to create directory");
+            }
+        }
+    }
+}
