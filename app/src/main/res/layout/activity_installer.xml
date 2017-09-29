@@ -49,11 +49,22 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
             android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="#0f0"
             android:onClick="handleBackup"
             android:text="@string/back_up_current_boot"
+            android:textAppearance="@style/TextAppearance.AppCompat.Widget.Button.Colored"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/flash_img" />
+
+        <TextView
+            android:id="@+id/reommended"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/it_is_strongly_recommended_that_you_back_up_your_current_boot_img"
+            android:textAlignment="center"
+            android:textColor="#f00" />
 
         <TextView
             android:id="@+id/credit_title"

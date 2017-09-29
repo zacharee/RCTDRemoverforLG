@@ -59,9 +59,43 @@ public class InstallerActivity extends AppCompatActivity {
         if (checkCallingOrSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE }, 10);
         } else {
-            setContentView(R.layout.layout_install_aik);
-            installAik();
+            installAikIfNeeded();
         }
+    }
+
+    private void installAikIfNeeded() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Process aikProc = Runtime.getRuntime().exec("aik");
+
+                    DataOutputStream outputStream = new DataOutputStream(aikProc.getOutputStream());
+
+                    outputStream.writeBytes("exit\n");
+                    outputStream.flush();
+
+                    aikProc.waitFor();
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.e("TAG", "Setting ContentView");
+                            setContentView(R.layout.activity_installer);
+
+                            TextView appBy = findViewById(R.id.app_made_by);
+                            TextView aikBy = findViewById(R.id.aik_by);
+
+                            appBy.setMovementMethod(LinkMovementMethod.getInstance());
+                            aikBy.setMovementMethod(LinkMovementMethod.getInstance());
+                        }
+                    });
+                } catch (Exception e) {
+                    ((TextView) findViewById(R.id.textView)).setText(getResources().getString(R.string.installing_aik));
+                    installAik();
+                }
+            }
+        }).start();
     }
 
     public void installAik() {
@@ -97,71 +131,44 @@ public class InstallerActivity extends AppCompatActivity {
                 }
 
                 try {
-                    Process aikProc = Runtime.getRuntime().exec("aik");
-
-                    DataOutputStream outputStream = new DataOutputStream(aikProc.getOutputStream());
-
-                    outputStream.writeBytes("exit\n");
-                    outputStream.flush();
-
-                    aikProc.waitFor();
-                    if (aikProc.exitValue() == 0) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Log.e("TAG", "Setting ContentView");
-                                setContentView(R.layout.activity_installer);
-
-                                TextView appBy = findViewById(R.id.app_made_by);
-                                TextView aikBy = findViewById(R.id.aik_by);
-
-                                appBy.setMovementMethod(LinkMovementMethod.getInstance());
-                                aikBy.setMovementMethod(LinkMovementMethod.getInstance());
-                            }
-                        });
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-
-                    try {
-                        SuUtils.sudo("echo '--update_package=/sdcard/0/AndroidImageKitchen/AIK.zip' >> /cache/recovery/command");
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            new AlertDialog.Builder(InstallerActivity.this)
-                                    .setTitle(getResources().getString(R.string.reboot))
-                                    .setMessage(getResources().getString(R.string.install_aik))
-                                    .setPositiveButton(getResources().getString(R.string.yes), new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            try {
-                                                SuUtils.sudo("reboot recovery");
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                    })
-                                    .setNegativeButton(getResources().getString(R.string.no), new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            finish();
-                                        }
-                                    })
-                                    .show();
-                        }
-                    });
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    SuUtils.sudo("echo '--update_package=/sdcard/0/AndroidImageKitchen/AIK.zip' >> /cache/recovery/command");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        new AlertDialog.Builder(InstallerActivity.this)
+                                .setTitle(getResources().getString(R.string.reboot))
+                                .setMessage(getResources().getString(R.string.install_aik))
+                                .setPositiveButton(getResources().getString(R.string.yes), new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        try {
+                                            SuUtils.sudo("reboot recovery");
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                })
+                                .setNegativeButton(getResources().getString(R.string.no), new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        finish();
+                                    }
+                                })
+                                .show();
+                    }
+                });
             }
         }).start();
     }
 
     public void handlePatch(View v) {
+        setContentView(R.layout.layout_checkroot);
+        ((TextView)findViewById(R.id.textView)).setText(getResources().getString(R.string.patching_image));
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -202,6 +209,8 @@ public class InstallerActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            setContentView(R.layout.activity_installer);
+
                             new AlertDialog.Builder(InstallerActivity.this)
                                     .setTitle(getResources().getString(R.string.done))
                                     .setMessage(Html.fromHtml("<b>" + getResources().getString(R.string.patch_done) + "</b>" +
@@ -221,6 +230,9 @@ public class InstallerActivity extends AppCompatActivity {
     }
 
     public void handleFlash(View v) {
+        setContentView(R.layout.layout_checkroot);
+        ((TextView) findViewById(R.id.textView)).setText(getResources().getString(R.string.flashing_image));
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -232,6 +244,8 @@ public class InstallerActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            setContentView(R.layout.activity_installer);
+
                             new AlertDialog.Builder(InstallerActivity.this)
                                     .setTitle(getResources().getString(R.string.flashed))
                                     .setMessage(getResources().getString(R.string.flash_done))
@@ -257,6 +271,9 @@ public class InstallerActivity extends AppCompatActivity {
     }
 
     public void handleBackup(View v) {
+        setContentView(R.layout.layout_checkroot);
+        ((TextView) findViewById(R.id.textView)).setText(getResources().getString(R.string.backing_up));
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -267,6 +284,8 @@ public class InstallerActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            setContentView(R.layout.activity_installer);
+
                             new AlertDialog.Builder(InstallerActivity.this)
                                     .setTitle(getResources().getString(R.string.backup))
                                     .setMessage(getResources().getString(R.string.backup_done))

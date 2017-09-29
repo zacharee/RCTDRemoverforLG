@@ -24,6 +24,13 @@
     <string name="flash_patched_image">Flash Patched Image</string>
     <string name="back_up_current_boot">Back Up Current Boot</string>
     <string name="credits">Credits:</string>
-    <string name="wrapper_by">Wrapper App By <a href="https://forum.xda-developers.com/v20/how-to/rctd-remover-script-feedback-t3675968/">Zacharee1 on XDA</a></string>
-    <string name="aik_by">Android Image Kitchen By <a href="https://forum.xda-developers.com/showthread.php?t=2073775">osm0sis on XDA</a></string>
+    <string name="wrapper_by">Wrapper App By&#160;<a href="https://forum.xda-developers.com/v20/how-to/rctd-remover-script-feedback-t3675968/">Zacharee1 on XDA</a></string>
+    <string name="aik_by">Android Image Kitchen By&#160;<a href="https://forum.xda-developers.com/showthread.php?t=2073775">osm0sis on XDA</a></string>
+
+    <string name="checking_for_root">Checking for root&#8230;</string>
+    <string name="installing_aik">Installing AIK&#8230;</string>
+    <string name="patching_image">Patching Image&#8230;</string>
+    <string name="flashing_image">Flashing Image&#8230;</string>
+    <string name="backing_up">Backing Up Image&#8230;</string>
+    <string name="it_is_strongly_recommended_that_you_back_up_your_current_boot_img">It is STRONGLY recommended that you back up your current boot.img!</string>
 </resources>
