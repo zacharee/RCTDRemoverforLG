@@ -19,6 +19,53 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="32dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/status_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:text="RCTD Status:"
+                android:textAlignment="textEnd"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/status_report"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:text="Unknown"
+                android:textAlignment="textStart"
+                android:textColor="#ff0"
+                android:textSize="18sp" />
+
+            <ImageButton
+                android:id="@+id/refresh_status"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:foreground="@drawable/fade_selector"
+                android:cropToPadding="true"
+                android:focusableInTouchMode="true"
+                android:focusable="true"
+                android:clickable="true"
+                android:onClick="checkStatus"
+                android:tint="#fff"
+                app:srcCompat="@drawable/ic_refresh_black_24dp" />
+        </LinearLayout>
+
         <Button
             android:id="@+id/install"
             android:layout_width="match_parent"

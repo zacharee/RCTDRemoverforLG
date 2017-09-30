@@ -1,12 +1,13 @@
 package com.zacharee1.rctdremoverforlg;
 
 import android.Manifest;
-import android.content.Context;
+import android.animation.Animator;
+import android.animation.AnimatorSet;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.graphics.Color;
 import android.os.Environment;
-import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
@@ -20,7 +21,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.zacharee1.rctdremoverforlg.misc.SuUtils;
-import com.zacharee1.rctdremoverforlg.misc.Utils;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -82,6 +82,8 @@ public class InstallerActivity extends AppCompatActivity {
                         public void run() {
                             Log.e("TAG", "Setting ContentView");
                             setContentView(R.layout.activity_installer);
+
+                            checkStatus();
 
                             TextView appBy = findViewById(R.id.app_made_by);
                             TextView aikBy = findViewById(R.id.aik_by);
@@ -201,7 +203,7 @@ public class InstallerActivity extends AppCompatActivity {
                 }
 
                 try {
-                    final String executResult = SuUtils.sudoForResult("cp /sdcard/AndroidImageKitchen/executemod.sh /data/local/AIK-mobile/.",
+                    final String executeResult = SuUtils.sudoForResult("cp /sdcard/AndroidImageKitchen/executemod.sh /data/local/AIK-mobile/.",
                             "aik",
                             "chmod 0755 executemod.sh",
                             "./executemod.sh");
@@ -211,13 +213,15 @@ public class InstallerActivity extends AppCompatActivity {
                         public void run() {
                             setContentView(R.layout.activity_installer);
 
+                            checkStatus();
+
                             new AlertDialog.Builder(InstallerActivity.this)
                                     .setTitle(getResources().getString(R.string.done))
                                     .setMessage(Html.fromHtml("<b>" + getResources().getString(R.string.patch_done) + "</b>" +
                                             "<br><br>" +
                                             "<b>" + getResources().getString(R.string.log) + "</b>" +
                                             "<br><br>" +
-                                            executResult.replace("\n", "<br>")))
+                                            executeResult.replace("\n", "<br>")))
                                     .setPositiveButton(getResources().getString(R.string.ok), null)
                                     .show();
                         }
@@ -245,6 +249,8 @@ public class InstallerActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             setContentView(R.layout.activity_installer);
+
+                            checkStatus();
 
                             new AlertDialog.Builder(InstallerActivity.this)
                                     .setTitle(getResources().getString(R.string.flashed))
@@ -286,6 +292,8 @@ public class InstallerActivity extends AppCompatActivity {
                         public void run() {
                             setContentView(R.layout.activity_installer);
 
+                            checkStatus();
+
                             new AlertDialog.Builder(InstallerActivity.this)
                                     .setTitle(getResources().getString(R.string.backup))
                                     .setMessage(getResources().getString(R.string.backup_done))
@@ -296,6 +304,32 @@ public class InstallerActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+            }
+        }).start();
+    }
+
+    public void checkStatus(View v) {
+        v.animate().rotationBy(360).setDuration(500).start();
+        checkStatus();
+    }
+
+    public void checkStatus() {
+        final TextView report = findViewById(R.id.status_report);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final String result = SuUtils.sudoForResult("ps | grep rctd");
+                final boolean notThere = result.isEmpty() ||
+                        (!result.contains("/sbin/rctd"));
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        report.setText(notThere ? "Not Found" : "Currently Running");
+                        report.setTextColor(notThere ? Color.GREEN : Color.RED);
+                    }
+                });
             }
         }).start();
     }
