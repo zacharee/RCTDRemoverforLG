@@ -93,7 +93,12 @@ public class InstallerActivity extends AppCompatActivity {
                         }
                     });
                 } catch (Exception e) {
-                    ((TextView) findViewById(R.id.textView)).setText(getResources().getString(R.string.installing_aik));
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            ((TextView) findViewById(R.id.textView)).setText(getResources().getString(R.string.installing_aik));
+                        }
+                    });
                     installAik();
                 }
             }
