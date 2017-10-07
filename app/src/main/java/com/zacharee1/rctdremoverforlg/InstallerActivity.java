@@ -93,12 +93,15 @@ public class InstallerActivity extends AppCompatActivity {
                         }
                     });
                 } catch (Exception e) {
+                    e.printStackTrace();
+
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             ((TextView) findViewById(R.id.textView)).setText(getResources().getString(R.string.installing_aik));
                         }
                     });
+
                     installAik();
                 }
             }
@@ -165,6 +168,7 @@ public class InstallerActivity extends AppCompatActivity {
                                         finish();
                                     }
                                 })
+                                .setCancelable(false)
                                 .show();
                     }
                 });
@@ -346,7 +350,7 @@ public class InstallerActivity extends AppCompatActivity {
             int result = grantResults[i];
 
             if (perm.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) && result == PackageManager.PERMISSION_GRANTED) {
-                installAik();
+                installAikIfNeeded();
             } else {
                 finish();
             }
