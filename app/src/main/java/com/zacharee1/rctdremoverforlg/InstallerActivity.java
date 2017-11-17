@@ -1,8 +1,6 @@
 package com.zacharee1.rctdremoverforlg;
 
 import android.Manifest;
-import android.animation.Animator;
-import android.animation.AnimatorSet;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -28,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Date;
 
 public class InstallerActivity extends AppCompatActivity {
@@ -176,7 +175,7 @@ public class InstallerActivity extends AppCompatActivity {
         }).start();
     }
 
-    public void handlePatch(View v) {
+    public void handlePatch(final View v) {
         setContentView(R.layout.layout_checkroot);
         ((TextView)findViewById(R.id.textView)).setText(getResources().getString(R.string.patching_image));
 
@@ -185,8 +184,19 @@ public class InstallerActivity extends AppCompatActivity {
             public void run() {
                 Looper.prepare();
 
+                int id = v.getId();
+                String aik = null;
+
+                switch (id) {
+                    case R.id.installRCT:
+                        aik = "executemodRCT.sh";
+                        break;
+                    case R.id.installTriton:
+                        aik = "executemodTriton.sh";
+                        break;
+                }
+
                 AssetManager assetManager = getAssets();
-                String aik = "executemod.sh";
 
                 InputStream in;
                 FileOutputStream out;
@@ -207,8 +217,21 @@ public class InstallerActivity extends AppCompatActivity {
                     out.flush();
                     out.close();
                     out = null;
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     e.printStackTrace();
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            setContentView(R.layout.activity_installer);
+
+                            new AlertDialog.Builder(InstallerActivity.this)
+                                    .setTitle(R.string.patch_fail)
+                                    .setMessage(Html.fromHtml(Arrays.toString(e.getStackTrace()).replace("\n", "<br>")))
+                                    .setPositiveButton(R.string.ok, null)
+                                    .show();
+                        }
+                    });
                 }
 
                 try {
@@ -235,8 +258,21 @@ public class InstallerActivity extends AppCompatActivity {
                                     .show();
                         }
                     });
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     e.printStackTrace();
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            setContentView(R.layout.activity_installer);
+
+                            new AlertDialog.Builder(InstallerActivity.this)
+                                    .setTitle(R.string.patch_fail)
+                                    .setMessage(Html.fromHtml(Arrays.toString(e.getStackTrace()).replace("\n", "<br>")))
+                                    .setPositiveButton(R.string.ok, null)
+                                    .show();
+                        }
+                    });
                 }
             }
         }).start();
@@ -324,19 +360,32 @@ public class InstallerActivity extends AppCompatActivity {
 
     public void checkStatus() {
         final TextView report = findViewById(R.id.status_report);
+        final TextView triton = findViewById(R.id.triton_status_report);
 
         new Thread(new Runnable() {
             @Override
             public void run() {
-                final String result = SuUtils.sudoForResult("ps | grep rctd");
-                final boolean notThere = result.isEmpty() ||
-                        (!result.contains("/sbin/rctd"));
+                final String rctResult = SuUtils.sudoForResult("ps | grep rctd");
+                final boolean rctNotThere = rctResult.isEmpty() ||
+                        (!rctResult.contains("/sbin/rctd"));
 
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        report.setText(notThere ? "Not Found" : "Currently Running");
-                        report.setTextColor(notThere ? Color.GREEN : Color.RED);
+                        report.setText(rctNotThere ? R.string.not_found : R.string.running);
+                        report.setTextColor(rctNotThere ? Color.GREEN : Color.RED);
+                    }
+                });
+
+                final String tritonResult = SuUtils.sudoForResult("ps | grep triton");
+                final boolean tritonNotThere = tritonResult.isEmpty() ||
+                        (!tritonResult.contains("/system/bin/triton"));
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        triton.setText(tritonNotThere ? R.string.not_found : R.string.running);
+                        triton.setTextColor(tritonNotThere ? Color.GREEN : Color.RED);
                     }
                 });
             }

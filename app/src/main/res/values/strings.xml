@@ -18,9 +18,11 @@
     <string name="flash_done">The modified boot image has been flashed to your device. Reboot for it to take effect.</string>
     <string name="backup_done">Your current boot partition has been backed up! You can find it under /sdcard/AndroidImageKitchen/Backups/.</string>
     <string name="install_aik">Click yes to reboot to Recovery and install Android Image Kitchen. Otherwise, choose no. You can reboot to Recovery on your own or reopen this app.</string>
+    <string name="patch_fail">Patch failed!</string>
 
     <string name="log">Log:</string>
-    <string name="patch_boot_img">Patch boot.img</string>
+    <string name="rm_rct">Remove RCTD and CCMD</string>
+    <string name="rm_triton">Remove Triton</string>
     <string name="flash_patched_image">Flash Patched Image</string>
     <string name="back_up_current_boot">Back Up Current Boot</string>
     <string name="credits">Credits:</string>
@@ -33,4 +35,10 @@
     <string name="flashing_image">Flashing Image&#8230;</string>
     <string name="backing_up">Backing Up Image&#8230;</string>
     <string name="it_is_strongly_recommended_that_you_back_up_your_current_boot_img">It is STRONGLY recommended that you back up your current boot.img!</string>
+    <string name="unknown">Unknown</string>
+    <string name="triton_status">Triton Status:</string>
+    <string name="rctd_status">RCTD Status:</string>
+
+    <string name="not_found">Not Found</string>
+    <string name="running">Currently Running</string>
 </resources>
