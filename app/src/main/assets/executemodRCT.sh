@@ -12,7 +12,7 @@ fi
 cd ramdisk
 
 sed -i -e '/^# LG RCT(Rooting Check Tool)$/,/^$/{/^\(#\|$\)/!s/^/#/}' init.lge.rc
-sed -i -e '/^# service ccmd /system/bin/ccmd$/,/^$/{/^\(#\|$\)/!s/^/#/}' init.lge.rc
+sed -i -e '\_^service ccmd /system/bin/ccmd$_,/^$/{/^\(#\|$\)/!s/^/#/}' init.lge.rc
 
 cd ../
 

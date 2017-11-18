@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 
+project.version = 7
+
 android {
     compileSdkVersion 26
     buildToolsVersion '26.0.2'
@@ -7,8 +9,8 @@ android {
         applicationId "com.zacharee1.rctdremoverforlg"
         minSdkVersion 23
         targetSdkVersion 26
-        versionCode 6
-        versionName "1.0"
+        versionCode project.version
+        versionName project.version + ""
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

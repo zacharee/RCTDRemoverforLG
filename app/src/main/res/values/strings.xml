@@ -18,7 +18,7 @@
     <string name="flash_done">The modified boot image has been flashed to your device. Reboot for it to take effect.</string>
     <string name="backup_done">Your current boot partition has been backed up! You can find it under /sdcard/AndroidImageKitchen/Backups/.</string>
     <string name="install_aik">Click yes to reboot to Recovery and install Android Image Kitchen. Otherwise, choose no. You can reboot to Recovery on your own or reopen this app.</string>
-    <string name="patch_fail">Patch failed!</string>
+    <string name="failed">Failed!</string>
 
     <string name="log">Log:</string>
     <string name="rm_rct">Remove RCTD and CCMD</string>
@@ -41,4 +41,5 @@
 
     <string name="not_found">Not Found</string>
     <string name="running">Currently Running</string>
+    <string name="ccmd_status">CCMD Status:</string>
 </resources>

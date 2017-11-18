@@ -220,18 +220,7 @@ public class InstallerActivity extends AppCompatActivity {
                 } catch (final Exception e) {
                     e.printStackTrace();
 
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            setContentView(R.layout.activity_installer);
-
-                            new AlertDialog.Builder(InstallerActivity.this)
-                                    .setTitle(R.string.patch_fail)
-                                    .setMessage(Html.fromHtml(Arrays.toString(e.getStackTrace()).replace("\n", "<br>")))
-                                    .setPositiveButton(R.string.ok, null)
-                                    .show();
-                        }
-                    });
+                    handleException(e);
                 }
 
                 try {
@@ -261,21 +250,25 @@ public class InstallerActivity extends AppCompatActivity {
                 } catch (final Exception e) {
                     e.printStackTrace();
 
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            setContentView(R.layout.activity_installer);
-
-                            new AlertDialog.Builder(InstallerActivity.this)
-                                    .setTitle(R.string.patch_fail)
-                                    .setMessage(Html.fromHtml(Arrays.toString(e.getStackTrace()).replace("\n", "<br>")))
-                                    .setPositiveButton(R.string.ok, null)
-                                    .show();
-                        }
-                    });
+                    handleException(e);
                 }
             }
         }).start();
+    }
+
+    private void handleException(final Exception e) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                setContentView(R.layout.activity_installer);
+
+                new AlertDialog.Builder(InstallerActivity.this)
+                        .setTitle(R.string.failed)
+                        .setMessage(Html.fromHtml(Arrays.toString(e.getStackTrace()).replace("\n", "<br>")))
+                        .setPositiveButton(R.string.ok, null)
+                        .show();
+            }
+        });
     }
 
     public void handleFlash(View v) {
@@ -316,6 +309,8 @@ public class InstallerActivity extends AppCompatActivity {
                     });
                 } catch (Exception e) {
                     e.printStackTrace();
+
+                    handleException(e);
                 }
             }
         }).start();
@@ -348,6 +343,8 @@ public class InstallerActivity extends AppCompatActivity {
                     });
                 } catch (Exception e) {
                     e.printStackTrace();
+
+                    handleException(e);
                 }
             }
         }).start();
@@ -361,6 +358,7 @@ public class InstallerActivity extends AppCompatActivity {
     public void checkStatus() {
         final TextView report = findViewById(R.id.status_report);
         final TextView triton = findViewById(R.id.triton_status_report);
+        final TextView ccmd = findViewById(R.id.ccmd_status_report);
 
         new Thread(new Runnable() {
             @Override
@@ -369,23 +367,25 @@ public class InstallerActivity extends AppCompatActivity {
                 final boolean rctNotThere = rctResult.isEmpty() ||
                         (!rctResult.contains("/sbin/rctd"));
 
+                final String tritonResult = SuUtils.sudoForResult("ps | grep triton");
+                final boolean tritonNotThere = tritonResult.isEmpty() ||
+                        (!tritonResult.contains("/system/bin/triton"));
+
+                final String ccmdResult = SuUtils.sudoForResult("ps | grep ccmd");
+                final boolean ccmdNotThere = ccmdResult.isEmpty() ||
+                        !ccmdResult.contains("/system/bin/ccmd");
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         report.setText(rctNotThere ? R.string.not_found : R.string.running);
                         report.setTextColor(rctNotThere ? Color.GREEN : Color.RED);
-                    }
-                });
 
-                final String tritonResult = SuUtils.sudoForResult("ps | grep triton");
-                final boolean tritonNotThere = tritonResult.isEmpty() ||
-                        (!tritonResult.contains("/system/bin/triton"));
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
                         triton.setText(tritonNotThere ? R.string.not_found : R.string.running);
                         triton.setTextColor(tritonNotThere ? Color.GREEN : Color.RED);
+
+                        ccmd.setText(ccmdNotThere ? R.string.not_found : R.string.running);
+                        ccmd.setTextColor(ccmdNotThere ? Color.GREEN : Color.RED);
                     }
                 });
             }
