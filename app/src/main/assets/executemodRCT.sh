@@ -1,6 +1,11 @@
 #!/system/bin/sh
 
-dd if=/dev/block/bootdevice/by-name/boot of=/data/local/AIK-mobile/boot.img
+if [ ! -f /storage/emulated/0/AndroidImageKitchen/boot.img ]
+then
+    dd if=/dev/block/bootdevice/by-name/boot of=/data/local/AIK-mobile/boot.img
+else
+    cp /storage/emulated/0/AndroidImageKitchen/boot.img /data/local/AIK-mobile/boot.img
+fi
 
 ./unpackimg.sh boot.img
 

@@ -235,10 +235,10 @@ public class InstallerActivity extends AppCompatActivity {
                 }
 
                 try {
-                    final String executeResult = SuUtils.sudoForResult("cp /sdcard/AndroidImageKitchen/executemod.sh /data/local/AIK-mobile/.",
+                    final String executeResult = SuUtils.sudoForResult("cp /sdcard/AndroidImageKitchen/" + aik + " /data/local/AIK-mobile/.",
                             "aik",
-                            "chmod 0755 executemod.sh",
-                            "./executemod.sh");
+                            "chmod 0755 " + aik,
+                            "./" + aik);
 
                     runOnUiThread(new Runnable() {
                         @Override
