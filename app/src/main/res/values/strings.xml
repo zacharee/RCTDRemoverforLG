@@ -27,7 +27,8 @@
     <string name="rm_rct">Remove RCTD</string>
     <string name="rm_ccmd">Remove CCMD</string>
     <string name="rm_triton">Remove Triton</string>
-    <string name="patch_flash_image">Patch &amp; Flash Image</string>
+    <string name="patch_image">Patch Image</string>
+    <string name="flash_image">Flash Image</string>
     <string name="back_up_current_boot">Back Up Current Boot</string>
     <string name="credits">Credits:</string>
     <string name="wrapper_by">Wrapper App By&#160;<a href="https://forum.xda-developers.com/v20/how-to/rctd-remover-script-feedback-t3675968/">Zacharee1 on XDA</a></string>

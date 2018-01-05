@@ -154,16 +154,31 @@
                 android:minHeight="48dp"
                 app:text="@string/rm_triton" />
 
-            <Button
-                android:id="@+id/backup_orig2"
-                android:layout_width="match_parent"
+            <android.support.v7.widget.ButtonBarLayout
                 android:layout_height="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_marginEnd="16dp"
                 android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_weight="1"
-                android:onClick="handlePatch"
-                android:text="@string/patch_flash_image" />
+                android:layout_marginTop="16dp">
+
+                <Button
+                    android:id="@+id/patch_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:onClick="handlePatch"
+                    android:text="@string/patch_image" />
+
+                <Button
+                    android:id="@+id/flash_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:onClick="handleFlash"
+                    android:text="@string/flash_image" />
+
+
+            </android.support.v7.widget.ButtonBarLayout>
 
             <Button
                 android:id="@+id/backup_orig"

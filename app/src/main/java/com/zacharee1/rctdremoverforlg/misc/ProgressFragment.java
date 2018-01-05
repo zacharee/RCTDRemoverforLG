@@ -20,6 +20,8 @@ import com.zacharee1.rctdremoverforlg.InstallerActivity;
 import com.zacharee1.rctdremoverforlg.R;
 
 import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.listener.ProcessListener;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,6 +54,7 @@ public class ProgressFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        setCancelable(false);
         return new AlertDialog.Builder(getActivity())
                 .setView(R.layout.terminal_output_layout)
                 .setTitle(mTitleRes)
@@ -103,45 +106,52 @@ public class ProgressFragment extends DialogFragment {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                final String result = SuUtils.suAndPrintToView(
+                mExecutor.addListener(new ProcessListener() {
+                    @Override
+                    public void afterFinish(Process process, final ProcessResult result) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                final Button positive = ((AlertDialog) getDialog()).getButton(DialogInterface.BUTTON_POSITIVE);
+                                positive.setEnabled(true);
+
+                                ((ButtonBarLayout) positive.getParent()).removeView(((ButtonBarLayout) positive.getParent()).findViewById(R.id.loader));
+
+                                if (result.getExitValue() == 0) {
+                                    positive.setText(mPositiveRes);
+                                    positive.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            if (mPositiveRunnable != null) new Handler(Looper.getMainLooper()).post(mPositiveRunnable);
+                                            dismiss();
+                                        }
+                                    });
+                                    getDialog().setTitle(R.string.done);
+                                } else {
+                                    positive.setText(R.string.retry);
+                                    positive.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            dismiss();
+                                            if (mFailRunnable != null) new Handler(Looper.getMainLooper()).post(mFailRunnable);
+                                        }
+                                    });
+                                    getDialog().setTitle(R.string.failed);
+                                }
+                            }
+                        });
+
+                        if (mListener != null) mListener.onOperationFinish();
+                    }
+                });
+
+                SuUtils.suAndPrintToView(
                         mExecutor,
                         getActivity(),
                         (TerminalView) getDialog().findViewById(R.id.terminal_view),
                         mCommands
                 );
-
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        final Button positive = ((AlertDialog) getDialog()).getButton(DialogInterface.BUTTON_POSITIVE);
-                        positive.setEnabled(true);
-
-                        ((ButtonBarLayout) positive.getParent()).removeView(((ButtonBarLayout) positive.getParent()).findViewById(R.id.loader));
-
-                        if (result.endsWith("Done!")) {
-                            positive.setText(mPositiveRes);
-                            positive.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    if (mPositiveRunnable != null) new Handler(Looper.getMainLooper()).post(mPositiveRunnable);
-                                    dismiss();
-                                }
-                            });
-                        } else {
-                            positive.setText(R.string.retry);
-                            positive.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    dismiss();
-                                    if (mFailRunnable != null) new Handler(Looper.getMainLooper()).post(mFailRunnable);
-                                }
-                            });
-                        }
-                    }
-                });
-
-                if (mListener != null) mListener.onOperationFinish();
-            }
+                }
         }).start();
     }
 

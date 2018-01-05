@@ -9,7 +9,6 @@
       <module fileurl="file://$PROJECT_DIR$/slf4j-android-1.7.25/slf4j-android-1.7.25.iml" filepath="$PROJECT_DIR$/slf4j-android-1.7.25/slf4j-android-1.7.25.iml" />
       <module fileurl="file://$PROJECT_DIR$/slf4j-api/slf4j-api.iml" filepath="$PROJECT_DIR$/slf4j-api/slf4j-api.iml" />
       <module fileurl="file://$PROJECT_DIR$/slf4j-api-1.7.25/slf4j-api-1.7.25.iml" filepath="$PROJECT_DIR$/slf4j-api-1.7.25/slf4j-api-1.7.25.iml" />
-      <module fileurl="file://$PROJECT_DIR$/slf4j-api-1.7.25/slf4j-api-1.7.25.iml" filepath="$PROJECT_DIR$/slf4j-api-1.7.25/slf4j-api-1.7.25.iml" />
     </modules>
   </component>
 </project>

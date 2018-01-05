@@ -399,9 +399,9 @@ public class InstallerActivity extends AppCompatActivity implements SwipeRefresh
                         handlePatch(v);
                     }
                 },
-                "cp /sdcard/AndroidImageKitchen/" + executeMod + " /data/local/AIK-mobile/.",
-                "cd /data/local/AIK-mobile/",
-                "chmod 0755 " + executeMod,
+                "cp /sdcard/AndroidImageKitchen/" + executeMod + " /data/local/AIK-mobile/. || exit 1",
+                "cd /data/local/AIK-mobile/ || exit 1",
+                "chmod 0755 " + executeMod + " || exit 1",
                 "./" + executeMod + " " + patchRctd + " " + patchCcmd + " " + patchTriton
         );
     }
@@ -427,7 +427,7 @@ public class InstallerActivity extends AppCompatActivity implements SwipeRefresh
                         handleFlash(v);
                     }
                 },
-                "dd if=/sdcard/AndroidImageKitchen/boot.img of=/dev/block/bootdevice/by-name/boot",
+                "dd if=/storage/emulated/0/AndroidImageKitchen/boot.img of=/dev/block/bootdevice/by-name/boot || exit 1",
                 "echo Done!"
         );
     }
@@ -447,7 +447,7 @@ public class InstallerActivity extends AppCompatActivity implements SwipeRefresh
                 "mkdir /sdcard/AndroidImageKitchen/Backups/",
                 "dd if=/dev/block/bootdevice/by-name/boot of=/sdcard/AndroidImageKitchen/Backups/" +
                         new Date().toString().replace(" ", "_") +
-                        ".img",
+                        ".img || exit 1",
                 "echo Done!"
         );
     }
