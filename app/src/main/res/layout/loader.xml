@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<fr.castorflex.android.circularprogressbar.CircularProgressBar xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/loader"
+    android:indeterminate="true"
+    android:layout_gravity="start"
+    style="?android:attr/progressBarStyle"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cpb_colors="@array/loading_colors" />

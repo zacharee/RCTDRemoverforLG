@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <array name="loading_colors">
-        <item>#f00</item>
-        <item>#FF8000</item>
-        <item>#ff0</item>
-        <item>#80FF00</item>
-        <item>#0f0</item>
-        <item>#00FF80</item>
-        <item>#0ff</item>
-        <item>#0080FF</item>
-        <item>#00f</item>
-        <item>#4400FF</item>
-        <item>#80f</item>
-        <item>#C40080</item>
+        <item>@color/color_1</item>
+        <item>@color/color_2</item>
+        <item>@color/color_3</item>
+        <item>@color/color_4</item>
+        <item>@color/color_5</item>
+        <item>@color/color_6</item>
+        <item>@color/color_7</item>
+        <item>@color/color_8</item>
+        <item>@color/color_9</item>
+        <item>@color/color_a</item>
+        <item>@color/color_b</item>
+        <item>@color/color_c</item>
     </array>
 </resources>

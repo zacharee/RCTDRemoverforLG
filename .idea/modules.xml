@@ -4,6 +4,12 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/RCTDRemoverforLG.iml" filepath="$PROJECT_DIR$/RCTDRemoverforLG.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/commons-io-2.6/commons-io-2.6.iml" filepath="$PROJECT_DIR$/commons-io-2.6/commons-io-2.6.iml" />
+      <module fileurl="file://$PROJECT_DIR$/slf4j-android/slf4j-android.iml" filepath="$PROJECT_DIR$/slf4j-android/slf4j-android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/slf4j-android-1.7.25/slf4j-android-1.7.25.iml" filepath="$PROJECT_DIR$/slf4j-android-1.7.25/slf4j-android-1.7.25.iml" />
+      <module fileurl="file://$PROJECT_DIR$/slf4j-api/slf4j-api.iml" filepath="$PROJECT_DIR$/slf4j-api/slf4j-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/slf4j-api-1.7.25/slf4j-api-1.7.25.iml" filepath="$PROJECT_DIR$/slf4j-api-1.7.25/slf4j-api-1.7.25.iml" />
+      <module fileurl="file://$PROJECT_DIR$/slf4j-api-1.7.25/slf4j-api-1.7.25.iml" filepath="$PROJECT_DIR$/slf4j-api-1.7.25/slf4j-api-1.7.25.iml" />
     </modules>
   </component>
 </project>

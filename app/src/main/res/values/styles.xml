@@ -8,4 +8,8 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="TerminalFont" parent="TextAppearance.AppCompat">
+        <item name="android:fontFamily">monospace</item>
+    </style>
+
 </resources>

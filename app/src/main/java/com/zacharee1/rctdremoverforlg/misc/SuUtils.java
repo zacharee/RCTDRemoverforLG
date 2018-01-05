@@ -1,6 +1,17 @@
 package com.zacharee1.rctdremoverforlg.misc;
 
+import android.app.Activity;
+import android.content.Context;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
+import android.widget.ScrollView;
+import android.widget.TextView;
+
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -9,6 +20,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class SuUtils
 {
@@ -68,20 +82,13 @@ public class SuUtils
 
             for (String s : strings) {
                 outputStream.writeBytes(s+"\n");
-                Log.e("Sudo Exec", s);
                 outputStream.flush();
             }
 
             outputStream.writeBytes("exit\n");
             outputStream.flush();
-//            try {
-//                su.waitFor();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-            res = readFully(response);
 
-            Log.e("RES", res);
+            res = readFully(response);
 
             outputStream.close();
         } catch (Exception e){
@@ -102,6 +109,41 @@ public class SuUtils
         }
 
         return baos.toString("UTF-8");
+    }
+
+    public static String suAndPrintToView(final ProcessExecutor processExecutor, final Activity activity, final TerminalView addTo, ArrayList<String> commands) {
+        final StringBuilder builder = new StringBuilder();
+
+        try {
+            processExecutor.command("su", "-c", TextUtils.join(" ; ", commands))
+                    .redirectOutput(new LogOutputStream() {
+                        @Override
+                        protected void processLine(final String line) {
+                            activity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    addTo.addText(line + "\n");
+                                    builder.append(line);
+                                    final ViewParent scroll = (addTo.getParent()).getParent();
+
+                                    if (scroll instanceof ScrollView) {
+                                        ((ScrollView) scroll).post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                ((ScrollView) scroll).fullScroll(ScrollView.FOCUS_DOWN);
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    })
+                    .execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return builder.toString();
     }
 
     public static boolean testSudo() {

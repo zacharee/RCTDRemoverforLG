@@ -1,6 +1,8 @@
 package com.zacharee1.rctdremoverforlg.misc;
 
+import android.content.Context;
 import android.util.Log;
+import android.util.TypedValue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,5 +45,9 @@ public class Utils {
             Log.e(TAG, e.getMessage());
         }
 
+    }
+
+    public static int pxToDp(Context context, int dp) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context.getResources().getDisplayMetrics());
     }
 }

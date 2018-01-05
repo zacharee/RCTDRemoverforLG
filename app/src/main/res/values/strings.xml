@@ -9,21 +9,25 @@
     <string name="cancel">Cancel</string>
     <string name="later">Later</string>
     <string name="yes">Yes</string>
+    <string name="retry">Retry</string>
 
     <string name="done">Done</string>
     <string name="flashed">Flashed</string>
     <string name="backup">Backup</string>
+    <string name="flash">Flash</string>
 
     <string name="patch_done">Boot Image patched! You can find it under /sdcard/AndroidImageKitchen/.</string>
     <string name="flash_done">The modified boot image has been flashed to your device. Reboot for it to take effect.</string>
     <string name="backup_done">Your current boot partition has been backed up! You can find it under /sdcard/AndroidImageKitchen/Backups/.</string>
     <string name="install_aik">Click yes to reboot to Recovery and install Android Image Kitchen. Otherwise, choose no. You can reboot to Recovery on your own or reopen this app.</string>
     <string name="failed">Failed!</string>
+    <string name="working">Working&#8230;</string>
 
     <string name="log">Log:</string>
-    <string name="rm_rct">Remove RCTD and CCMD</string>
+    <string name="rm_rct">Remove RCTD</string>
+    <string name="rm_ccmd">Remove CCMD</string>
     <string name="rm_triton">Remove Triton</string>
-    <string name="flash_patched_image">Flash Patched Image</string>
+    <string name="patch_flash_image">Patch &amp; Flash Image</string>
     <string name="back_up_current_boot">Back Up Current Boot</string>
     <string name="credits">Credits:</string>
     <string name="wrapper_by">Wrapper App By&#160;<a href="https://forum.xda-developers.com/v20/how-to/rctd-remover-script-feedback-t3675968/">Zacharee1 on XDA</a></string>
@@ -38,8 +42,10 @@
     <string name="unknown">Unknown</string>
     <string name="triton_status">Triton Status:</string>
     <string name="rctd_status">RCTD Status:</string>
+    <string name="ccmd_status">CCMD Status:</string>
+
 
     <string name="not_found">Not Found</string>
     <string name="running">Currently Running</string>
-    <string name="ccmd_status">CCMD Status:</string>
+    <string name="checking">Checking&#8230;</string>
 </resources>

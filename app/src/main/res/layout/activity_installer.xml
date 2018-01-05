@@ -1,44 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/swipe_parent"
     tools:context="com.zacharee1.rctdremoverforlg.InstallerActivity">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
+        android:layout_height="match_parent">
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginBottom="32dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
             android:layout_marginEnd="16dp"
             android:layout_marginStart="16dp"
-            android:layout_weight="1"
-            android:foregroundGravity="center_horizontal"
-            android:gravity="center_horizontal"
-            android:orientation="horizontal">
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="32dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
                     <TextView
@@ -67,7 +63,7 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginEnd="16dp"
                     android:layout_marginStart="16dp"
                     android:layout_weight="1"
@@ -100,7 +96,7 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginEnd="16dp"
                     android:layout_marginStart="16dp"
                     android:layout_weight="1"
@@ -133,106 +129,87 @@
 
             </LinearLayout>
 
-            <ImageButton
-                android:id="@+id/refresh_status"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center_vertical"
-                android:background="@android:color/transparent"
-                android:clickable="true"
-                android:cropToPadding="true"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:foreground="@drawable/fade_selector"
-                android:onClick="checkStatus"
-                android:tint="#fff"
-                app:srcCompat="@drawable/ic_refresh_black_24dp" />
+            <com.zacharee1.rctdremoverforlg.misc.SwitchViewWithText
+                android:id="@+id/enable_patch_rctd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="48dp"
+                app:text="@string/rm_rct" />
 
+            <com.zacharee1.rctdremoverforlg.misc.SwitchViewWithText
+                android:id="@+id/enable_patch_ccmd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="48dp"
+                app:subText="Removing CCMD can cause bootloops! Proceed with caution."
+                app:text="@string/rm_ccmd" />
+
+            <com.zacharee1.rctdremoverforlg.misc.SwitchViewWithText
+                android:id="@+id/enable_patch_triton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="48dp"
+                app:text="@string/rm_triton" />
+
+            <Button
+                android:id="@+id/backup_orig2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_weight="1"
+                android:onClick="handlePatch"
+                android:text="@string/patch_flash_image" />
+
+            <Button
+                android:id="@+id/backup_orig"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="#0f0"
+                android:onClick="handleBackup"
+                android:text="@string/back_up_current_boot"
+                android:textAppearance="@style/TextAppearance.AppCompat.Widget.Button.Colored" />
+
+            <TextView
+                android:id="@+id/reommended"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/it_is_strongly_recommended_that_you_back_up_your_current_boot_img"
+                android:textAlignment="center"
+                android:textColor="#f00" />
+
+            <TextView
+                android:id="@+id/credit_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/credits"
+                android:textAlignment="center"
+                android:textAppearance="@android:style/TextAppearance.Material.Title" />
+
+            <TextView
+                android:id="@+id/app_made_by"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/wrapper_by"
+                android:textAlignment="center" />
+
+            <TextView
+                android:id="@+id/aik_by"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/aik_by"
+                android:textAlignment="center" />
         </LinearLayout>
+    </ScrollView>
 
-        <Button
-            android:id="@+id/installRCT"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="16dp"
-            android:onClick="handlePatch"
-            android:text="@string/rm_rct"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="parent" />
-
-        <Button
-            android:id="@+id/installTriton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="16dp"
-            android:onClick="handlePatch"
-            android:text="@string/rm_triton"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/installRCT" />
-
-        <Button
-            android:id="@+id/flash_img"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="16dp"
-            android:onClick="handleFlash"
-            android:text="@string/flash_patched_image"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/installTriton" />
-
-        <Button
-            android:id="@+id/backup_orig"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:backgroundTint="#0f0"
-            android:onClick="handleBackup"
-            android:text="@string/back_up_current_boot"
-            android:textAppearance="@style/TextAppearance.AppCompat.Widget.Button.Colored"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/flash_img" />
-
-        <TextView
-            android:id="@+id/reommended"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/it_is_strongly_recommended_that_you_back_up_your_current_boot_img"
-            android:textAlignment="center"
-            android:textColor="#f00" />
-
-        <TextView
-            android:id="@+id/credit_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/credits"
-            android:textAlignment="center"
-            android:textAppearance="@android:style/TextAppearance.Material.Title" />
-
-        <TextView
-            android:id="@+id/app_made_by"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/wrapper_by"
-            android:textAlignment="center" />
-
-        <TextView
-            android:id="@+id/aik_by"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/aik_by"
-            android:textAlignment="center" />
-    </LinearLayout>
-
-</android.support.constraint.ConstraintLayout>
+</android.support.v4.widget.SwipeRefreshLayout>
