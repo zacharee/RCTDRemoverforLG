@@ -9,6 +9,7 @@ import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -32,6 +33,7 @@ import com.zacharee1.rctdremoverforlg.misc.ProgressFragment;
 import com.zacharee1.rctdremoverforlg.misc.SuUtils;
 import com.zacharee1.rctdremoverforlg.misc.SwitchViewWithText;
 import com.zacharee1.rctdremoverforlg.misc.TerminalView;
+import com.zacharee1.rctdremoverforlg.misc.Utils;
 
 import org.zeroturnaround.exec.ProcessExecutor;
 
@@ -45,6 +47,7 @@ import java.util.Arrays;
 import java.util.Date;
 
 public class InstallerActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
+    public static final float AIK_VERSION = 3.0F;
 
     private SwitchViewWithText rctd;
     private SwitchViewWithText ccmd;
@@ -254,6 +257,7 @@ public class InstallerActivity extends AppCompatActivity implements SwipeRefresh
         new Thread(new Runnable() {
             @Override
             public void run() {
+                Looper.prepare();
                 try {
                     Process aikProc = Runtime.getRuntime().exec("aik");
 
@@ -264,7 +268,32 @@ public class InstallerActivity extends AppCompatActivity implements SwipeRefresh
 
                     aikProc.waitFor();
 
-                    setToMainScreen();
+                    if (Utils.getAikVersion() >= AIK_VERSION) {
+                        setToMainScreen();
+                    } else {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                new AlertDialog.Builder(InstallerActivity.this)
+                                        .setTitle(R.string.old_aik)
+                                        .setMessage(R.string.old_aik_msg)
+                                        .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                installAik();
+                                            }
+                                        })
+                                        .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                setToMainScreen();
+                                            }
+                                        })
+                                        .setCancelable(false)
+                                        .show();
+                            }
+                        });
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
 
@@ -402,7 +431,7 @@ public class InstallerActivity extends AppCompatActivity implements SwipeRefresh
                 "cp /sdcard/AndroidImageKitchen/" + executeMod + " /data/local/AIK-mobile/. || exit 1",
                 "cd /data/local/AIK-mobile/ || exit 1",
                 "chmod 0755 " + executeMod + " || exit 1",
-                "./" + executeMod + " " + patchRctd + " " + patchCcmd + " " + patchTriton
+                "./" + executeMod + " " + patchRctd + " " + patchCcmd + " " + patchTriton + " " + Build.DEVICE
         );
     }
 

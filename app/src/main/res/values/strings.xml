@@ -45,8 +45,10 @@
     <string name="rctd_status">RCTD Status:</string>
     <string name="ccmd_status">CCMD Status:</string>
 
-
     <string name="not_found">Not Found</string>
     <string name="running">Currently Running</string>
     <string name="checking">Checking&#8230;</string>
+
+    <string name="old_aik">Old AIK Version!</string>
+    <string name="old_aik_msg">Your AIK version is outdated! Using older AIK versions may lead to bootloops. Update?</string>
 </resources>

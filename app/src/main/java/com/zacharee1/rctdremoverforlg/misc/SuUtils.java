@@ -1,14 +1,10 @@
 package com.zacharee1.rctdremoverforlg.misc;
 
 import android.app.Activity;
-import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.widget.ScrollView;
-import android.widget.TextView;
 
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -21,8 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Iterator;
 
 public class SuUtils
 {
@@ -113,6 +108,16 @@ public class SuUtils
 
     public static String suAndPrintToView(final ProcessExecutor processExecutor, final Activity activity, final TerminalView addTo, ArrayList<String> commands) {
         final StringBuilder builder = new StringBuilder();
+
+        ArrayList<String> origCmds = new ArrayList<>(commands);
+
+        for (int i = 0; i < origCmds.size(); i++) {
+            String cmd = origCmds.get(i);
+            if (!cmd.startsWith("echo")) {
+                String echo = "echo '<font color=\"#ffff00\">" + cmd + "</font>'".replace("|| exit 1", "");
+                commands.add(i, echo);
+            }
+        }
 
         try {
             processExecutor.command("su", "-c", TextUtils.join(" ; ", commands))
