@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 project.version = 7
 
@@ -43,4 +44,8 @@ dependencies {
     implementation project(':commons-io')
     implementation project(':slf4j-android')
     implementation project(':slf4j-api')
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}
+repositories {
+    mavenCentral()
 }
