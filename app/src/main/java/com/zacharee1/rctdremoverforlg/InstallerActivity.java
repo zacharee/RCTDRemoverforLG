@@ -1,6 +1,7 @@
 package com.zacharee1.rctdremoverforlg;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -21,6 +22,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
+import android.util.Log;
 import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.View;
@@ -35,7 +37,13 @@ import com.zacharee1.rctdremoverforlg.misc.SwitchViewWithText;
 import com.zacharee1.rctdremoverforlg.misc.TerminalView;
 import com.zacharee1.rctdremoverforlg.misc.Utils;
 
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.listener.ProcessDestroyer;
+import org.zeroturnaround.exec.listener.ProcessListener;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -45,9 +53,22 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.concurrent.Callable;
+
+import io.reactivex.Flowable;
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.Scheduler;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class InstallerActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
     public static final float AIK_VERSION = 3.0F;
+
+    public static final int NO_AIK = -1;
+    public static final int OLD_AIK = 1;
+    public static final int AIK = 0;
 
     private SwitchViewWithText rctd;
     private SwitchViewWithText ccmd;
@@ -63,22 +84,34 @@ public class InstallerActivity extends AppCompatActivity implements SwipeRefresh
 
         mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                if (SuUtils.testSudo()) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            setup();
-                        }
-                    });
-                } else {
-                    finish();
-                    Toast.makeText(InstallerActivity.this, getResources().getString(R.string.need_root), Toast.LENGTH_LONG).show();
-                }
-            }
-        }).start();
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                if (SuUtils.testSudo()) {
+//                    runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            setup();
+//                        }
+//                    });
+//                } else {
+//                    finish();
+//                    Toast.makeText(InstallerActivity.this, getResources().getString(R.string.need_root), Toast.LENGTH_LONG).show();
+//                }
+//            }
+//        }).start();
+
+        Observable.fromCallable(() -> SuUtils.testSudo())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(bool -> {
+                    if (bool) {
+                        setup();
+                    } else {
+                        finish();
+                        Toast.makeText(InstallerActivity.this, getResources().getString(R.string.need_root), Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     @Override
@@ -108,35 +141,40 @@ public class InstallerActivity extends AppCompatActivity implements SwipeRefresh
     }
 
     public void checkStatus() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                checkStatusFromThread();
-            }
-        }).start();
-    }
-
-    public void checkStatusFromThread() {
-
         final TextView report = findViewById(R.id.status_report);
         final TextView triton = findViewById(R.id.triton_status_report);
         final TextView ccmd = findViewById(R.id.ccmd_status_report);
 
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (!swipeRefreshLayout.isRefreshing()) swipeRefreshLayout.setRefreshing(true);
+        report.setTextColor(Color.YELLOW);
+        triton.setTextColor(Color.YELLOW);
+        ccmd.setTextColor(Color.YELLOW);
 
-                report.setText(R.string.checking);
-                triton.setText(R.string.checking);
-                ccmd.setText(R.string.checking);
+        report.setText(R.string.checking);
+        triton.setText(R.string.checking);
+        ccmd.setText(R.string.checking);
 
-                report.setTextColor(Color.YELLOW);
-                triton.setTextColor(Color.YELLOW);
-                ccmd.setTextColor(Color.YELLOW);
-            }
-        });
+        if (!swipeRefreshLayout.isRefreshing()) swipeRefreshLayout.setRefreshing(true);
 
+        Observable.fromCallable(() -> checkStatusAsync())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(bools -> {
+                    report.setText(bools[0] ? R.string.not_found : R.string.running);
+                    report.setTextColor(bools[0] ? Color.GREEN : Color.RED);
+
+                    triton.setText(bools[1] ? R.string.not_found : R.string.running);
+                    triton.setTextColor(bools[1] ? Color.GREEN : Color.RED);
+
+                    ccmd.setText(bools[2] ? R.string.not_found : R.string.running);
+                    ccmd.setTextColor(bools[2] ? Color.GREEN : Color.RED);
+
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        swipeRefreshLayout.setRefreshing(false);
+                    }, 500);
+                });
+    }
+
+    public Boolean[] checkStatusAsync() {
         final String rctResult = SuUtils.sudoForResult("ps | grep rctd");
         final boolean rctNotThere = rctResult.isEmpty() ||
                 (!rctResult.contains("/sbin/rctd"));
@@ -149,26 +187,7 @@ public class InstallerActivity extends AppCompatActivity implements SwipeRefresh
         final boolean ccmdNotThere = ccmdResult.isEmpty() ||
                 !ccmdResult.contains("/system/bin/ccmd");
 
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                report.setText(rctNotThere ? R.string.not_found : R.string.running);
-                report.setTextColor(rctNotThere ? Color.GREEN : Color.RED);
-
-                triton.setText(tritonNotThere ? R.string.not_found : R.string.running);
-                triton.setTextColor(tritonNotThere ? Color.GREEN : Color.RED);
-
-                ccmd.setText(ccmdNotThere ? R.string.not_found : R.string.running);
-                ccmd.setTextColor(ccmdNotThere ? Color.GREEN : Color.RED);
-            }
-        });
-
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                swipeRefreshLayout.setRefreshing(false);
-            }
-        }, 500);
+        return new Boolean[] {rctNotThere, tritonNotThere, ccmdNotThere};
     }
 
     private void setup() {
@@ -253,129 +272,110 @@ public class InstallerActivity extends AppCompatActivity implements SwipeRefresh
         });
     }
 
+    @SuppressLint("CheckResult")
     private void checkAikStatus() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Looper.prepare();
-                try {
-                    Process aikProc = Runtime.getRuntime().exec("aik");
-
-                    DataOutputStream outputStream = new DataOutputStream(aikProc.getOutputStream());
-
-                    outputStream.writeBytes("exit\n");
-                    outputStream.flush();
-
-                    aikProc.waitFor();
-
-                    if (Utils.getAikVersion() >= AIK_VERSION) {
-                        setToMainScreen();
-                    } else {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                new AlertDialog.Builder(InstallerActivity.this)
-                                        .setTitle(R.string.old_aik)
-                                        .setMessage(R.string.old_aik_msg)
-                                        .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                                installAik();
-                                            }
-                                        })
-                                        .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                                setToMainScreen();
-                                            }
-                                        })
-                                        .setCancelable(false)
-                                        .show();
-                            }
-                        });
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
+        Observable.fromCallable(() -> checkAikStatusAsync())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(status -> {
+                    switch (status) {
+                        case AIK:
+                            setToMainScreen();
+                            break;
+                        case NO_AIK:
                             ((TextView) findViewById(R.id.textView)).setText(getResources().getString(R.string.installing_aik));
-                        }
-                    });
-
-                    installAik();
-                }
-            }
-        }).start();
+                            installAik();
+                            break;
+                        case OLD_AIK:
+                            new AlertDialog.Builder(InstallerActivity.this)
+                                    .setTitle(R.string.old_aik)
+                                    .setMessage(R.string.old_aik_msg)
+                                    .setPositiveButton(R.string.yes, (dialogInterface, i) -> installAik())
+                                    .setNegativeButton(R.string.no, (dialogInterface, i) -> setToMainScreen())
+                                    .setCancelable(false)
+                                    .show();
+                            break;
+                    }
+                });
     }
 
+    private int checkAikStatusAsync() {
+        try {
+            Process aikProc = Runtime.getRuntime().exec("aik");
+
+            DataOutputStream outputStream = new DataOutputStream(aikProc.getOutputStream());
+
+            outputStream.writeBytes("exit\n");
+            outputStream.flush();
+
+            aikProc.waitFor();
+        } catch (Exception e) {
+            return NO_AIK;
+        }
+
+        return Utils.getAikVersion() >= AIK_VERSION ? AIK : OLD_AIK;
+    }
+
+    @SuppressLint("CheckResult")
     public void installAik() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Looper.prepare();
-
-                AssetManager assetManager = getAssets();
-                final String aik = "AIK.zip";
-
-                InputStream in;
-                FileOutputStream out;
-
-                try {
-                    in = assetManager.open(aik);
-                    String dest = Environment.getExternalStorageDirectory().getAbsolutePath() + "/AndroidImageKitchen/";
-                    File outDir = new File(dest);
-                    createDir(outDir);
-                    File outFile = new File(dest, aik);
-                    out = new FileOutputStream(outFile);
-
-                    copyFile(in, out);
-
-                    in.close();
-                    in = null;
-
-                    out.flush();
-                    out.close();
-                    out = null;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                try {
-                    SuUtils.sudo("echo '--update_package=/sdcard/0/AndroidImageKitchen/AIK.zip' >> /cache/recovery/command");
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
+        Observable.fromCallable(() -> installAikAsync())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(bool -> {
+                    if (bool) {
                         new AlertDialog.Builder(InstallerActivity.this)
                                 .setTitle(getResources().getString(R.string.reboot))
                                 .setMessage(getResources().getString(R.string.install_aik))
-                                .setPositiveButton(getResources().getString(R.string.yes), new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        try {
-                                            SuUtils.sudo("reboot recovery");
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
+                                .setPositiveButton(getResources().getString(R.string.yes), (dialogInterface, i) ->  {
+                                    try {
+                                        SuUtils.sudo("reboot recovery");
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
                                     }
                                 })
-                                .setNegativeButton(getResources().getString(R.string.no), new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        finish();
-                                    }
-                                })
+                                .setNegativeButton(getResources().getString(R.string.no), (dialogInterface, i) -> finish())
                                 .setCancelable(false)
                                 .show();
+                    } else {
+                        //TODO show install failed dialog here....
                     }
                 });
-            }
-        }).start();
+    }
+
+    private boolean installAikAsync() {
+        AssetManager assetManager = getAssets();
+        final String aik = "AIK.zip";
+
+        InputStream in;
+        FileOutputStream out;
+
+        try {
+            in = assetManager.open(aik);
+            String dest = Environment.getExternalStorageDirectory().getAbsolutePath() + "/AndroidImageKitchen/";
+            File outDir = new File(dest);
+            createDir(outDir);
+            File outFile = new File(dest, aik);
+            out = new FileOutputStream(outFile);
+
+            copyFile(in, out);
+
+            in.close();
+
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        try {
+            SuUtils.sudo("echo '--update_package=/sdcard/0/AndroidImageKitchen/AIK.zip' >> /cache/recovery/command");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
     public void handlePatch(final View v) {
@@ -401,11 +401,9 @@ public class InstallerActivity extends AppCompatActivity implements SwipeRefresh
             copyFile(in, out);
 
             in.close();
-            in = null;
 
             out.flush();
             out.close();
-            out = null;
         } catch (final Exception e) {
             e.printStackTrace();
 
@@ -416,18 +414,8 @@ public class InstallerActivity extends AppCompatActivity implements SwipeRefresh
                 R.string.flash,
                 R.string.cancel,
                 R.string.patching_image,
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        handleFlash(v);
-                    }
-                },
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        handlePatch(v);
-                    }
-                },
+                () -> handleFlash(v),
+                () -> handlePatch(v),
                 "cp /sdcard/AndroidImageKitchen/" + executeMod + " /data/local/AIK-mobile/. || exit 1",
                 "cd /data/local/AIK-mobile/ || exit 1",
                 "chmod 0755 " + executeMod + " || exit 1",

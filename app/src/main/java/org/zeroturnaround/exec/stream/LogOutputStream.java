@@ -30,7 +30,7 @@ import java.io.OutputStream;
 public abstract class LogOutputStream extends OutputStream {
 
   /** Initial buffer size. */
-  private static final int INTIAL_SIZE = 132;
+  private static final int INITIAL_SIZE = 132;
 
   /** Carriage return */
   private static final int CR = 0x0d;
@@ -40,7 +40,7 @@ public abstract class LogOutputStream extends OutputStream {
 
   /** the internal buffer */
   private final ByteArrayOutputStream buffer = new ByteArrayOutputStream(
-      INTIAL_SIZE);
+          INITIAL_SIZE);
 
   byte lastReceivedByte;
 

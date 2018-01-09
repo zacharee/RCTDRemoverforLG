@@ -1,1 +1,1 @@
-include ':app', ':commons-io-2.6', ':slf4j-android-1.7.25', ':slf4j-api-1.7.25', ':slf4j-android', ':slf4j-api'
+include ':app', ':commons-io', ':slf4j-api', ':slf4j-android'

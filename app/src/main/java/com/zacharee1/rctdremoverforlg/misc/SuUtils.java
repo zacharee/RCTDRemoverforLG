@@ -7,6 +7,8 @@ import android.view.ViewParent;
 import android.widget.ScrollView;
 
 import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.listener.ProcessListener;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 
 import java.io.BufferedReader;
@@ -19,6 +21,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import io.reactivex.Observable;
+
 public class SuUtils
 {
     public static Process sudo(String... strings) throws IOException {
@@ -27,23 +31,10 @@ public class SuUtils
         try{
             DataOutputStream outputStream = new DataOutputStream(su.getOutputStream());
 
-            BufferedReader inputReader = new BufferedReader(new InputStreamReader(su.getInputStream()));
-            BufferedReader errorReader = new BufferedReader(new InputStreamReader(su.getErrorStream()));
-
             for (String s : strings) {
                 Log.e("Sudo Exec", s);
                 outputStream.writeBytes(s + "\n");
                 outputStream.flush();
-
-                String line;
-
-//                while ((line = inputReader.readLine()) != null) {
-//                    Log.e("Sudo", line);
-//                }
-//
-//                while ((line = errorReader.readLine()) != null) {
-//                    Log.e("Sudo", line);
-//                }
             }
 
             outputStream.writeBytes("exit\n");
@@ -152,31 +143,17 @@ public class SuUtils
     }
 
     public static boolean testSudo() {
-        StackTraceElement st = null;
+        String commandResult;
 
-        try{
-            Process su = Runtime.getRuntime().exec("su");
-            DataOutputStream outputStream = new DataOutputStream(su.getOutputStream());
-
-            outputStream.writeBytes("exit\n");
-            outputStream.flush();
-
-            DataInputStream inputStream = new DataInputStream(su.getInputStream());
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-
-            while (bufferedReader.readLine() != null) {
-                bufferedReader.readLine();
-            }
-
-            su.waitFor();
+        try {
+            commandResult = new ProcessExecutor("su")
+                    .readOutput(true)
+                    .execute()
+                    .outputString();
         } catch (Exception e) {
-            e.printStackTrace();
-            for (StackTraceElement s : e.getStackTrace()) {
-                st = s;
-                if (st != null) break;
-            }
+            return false;
         }
 
-        return st == null;
+        return commandResult.isEmpty();
     }
 }

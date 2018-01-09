@@ -9,11 +9,9 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/commons-io-2.6" />
+            <option value="$PROJECT_DIR$/commons-io" />
             <option value="$PROJECT_DIR$/slf4j-android" />
-            <option value="$PROJECT_DIR$/slf4j-android-1.7.25" />
             <option value="$PROJECT_DIR$/slf4j-api" />
-            <option value="$PROJECT_DIR$/slf4j-api-1.7.25" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
