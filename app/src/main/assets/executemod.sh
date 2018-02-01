@@ -36,7 +36,7 @@ echoAndExec ${YELLOW} cd ramdisk
 if [ "$REM_RCTD" = "true" ]
 then
     echo "$COLOR_GRN_PRE Removing RCTD... $COLOR_POS"
-    echoAndExec ${YELLOW} sed -ir -e '/^# LG RCT(Rooting Check Tool)$/,/^$/{/^\(#\|$)/!s/^/#/}' init.lge.rc
+    echoAndExec ${YELLOW} sed -ir -e '/^# LG RCT(Rooting Check Tool)$/,/^$/{/^(#\|$)/!s/^/#/}' init.lge.rc
 fi
 
 if [ "$REM_CCMD" = "true" ]
