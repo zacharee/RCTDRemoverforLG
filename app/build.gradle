@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
-project.version = 8
+project.version = 9
 
 android {
     compileSdkVersion 27

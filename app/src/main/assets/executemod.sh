@@ -36,7 +36,7 @@ echoAndExec ${YELLOW} cd ramdisk
 if [ "$REM_RCTD" = "true" ]
 then
     echo "$COLOR_GRN_PRE Removing RCTD... $COLOR_POS"
-    echoAndExec ${YELLOW} sed -ir -e '/^# LG RCT(Rooting Check Tool)$/,/^$/{/^(#\|$)/!s/^/#/}' init.lge.rc
+    echoAndExec ${YELLOW} sed -ir -e '\_^service rctd /sbin/rctd$_,/^$/{/^(#\|$)/!s/^/#/}' init.lge.rc
 fi
 
 if [ "$REM_CCMD" = "true" ]
@@ -60,6 +60,6 @@ echo "$COLOR_GRN_PRE Moving modified boot.img to /sdcard/AndroidImageKitchen/boo
 echoAndExec ${YELLOW} mv image-new.img /storage/emulated/0/AndroidImageKitchen/boot.img
 
 echo "$COLOR_GRN_PRE Cleaning up... $COLOR_POS"
-echoAndExec ${YELLOW} ./cleanup.sh
+#echoAndExec ${YELLOW} ./cleanup.sh
 
 echo "Done!"
