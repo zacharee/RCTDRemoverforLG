@@ -60,6 +60,6 @@ echo "$COLOR_GRN_PRE Moving modified boot.img to /sdcard/AndroidImageKitchen/boo
 echoAndExec ${YELLOW} mv image-new.img /storage/emulated/0/AndroidImageKitchen/boot.img
 
 echo "$COLOR_GRN_PRE Cleaning up... $COLOR_POS"
-#echoAndExec ${YELLOW} ./cleanup.sh
+echoAndExec ${YELLOW} ./cleanup.sh
 
 echo "Done!"
