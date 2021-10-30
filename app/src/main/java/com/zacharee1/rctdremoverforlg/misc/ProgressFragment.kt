@@ -88,12 +88,12 @@ class ProgressFragment : DialogFragment() {
 
     @SuppressLint("CheckResult")
     fun executeCommands() {
-        val outputView = dialog!!.findViewById<TextView>(R.id.terminal_view)
+        val outputView = dialog!!.findViewById<TerminalView>(R.id.terminal_view)
         val scroller = dialog!!.findViewById<ScrollView>(R.id.scroller)
 
         val callbackList = object : CallbackList<String>() {
             override fun onAddElement(e: String) {
-                outputView.append("$e\n")
+                outputView.addText(("$e\n"))
 
                 scroller.post { scroller.fullScroll(ScrollView.FOCUS_DOWN) }
             }

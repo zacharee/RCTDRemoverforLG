@@ -14,6 +14,7 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -38,20 +39,17 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
         const val AIK = 0
     }
 
-    private var rctd: SwitchViewWithText? = null
-    private var triton: SwitchViewWithText? = null
-    private var ccmd: SwitchViewWithText? = null
+    private val rctd by lazy { findViewById<SwitchViewWithText>(R.id.enable_patch_rctd) }
+    private val triton by lazy { findViewById<SwitchViewWithText>(R.id.enable_patch_triton) }
+    private val ccmd by lazy { findViewById<SwitchViewWithText>(R.id.enable_patch_ccmd) }
+    private val refreshLayout by lazy { findViewById<SwipeRefreshLayout>(R.id.swipe_parent) }
 
-    private var mPrefs: SharedPreferences? = null
-
-    private var mRefreshLayout: SwipeRefreshLayout? = null
+    private val prefs: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
 
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.layout_checkroot)
-
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(this)
 
         Observable.fromCallable { Shell.rootAccess() }
             .subscribeOn(Schedulers.io())
@@ -110,7 +108,7 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
         triton.setText(R.string.checking)
         ccmd.setText(R.string.checking)
 
-        if (!(mRefreshLayout?.isRefreshing as Boolean)) mRefreshLayout?.isRefreshing = true
+        if (!(refreshLayout?.isRefreshing as Boolean)) refreshLayout?.isRefreshing = true
 
         Observable.fromCallable({ checkStatusAsync() })
             .subscribeOn(Schedulers.io())
@@ -126,7 +124,7 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
                 ccmd.setTextColor(if (bools[2]) Color.GREEN else Color.RED)
 
                 Handler(Looper.getMainLooper()).postDelayed({
-                    mRefreshLayout?.isRefreshing = false
+                    refreshLayout?.isRefreshing = false
                 }, 300)
             }
     }
@@ -148,6 +146,8 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
     }
 
     private fun setup() {
+        setContentView(R.layout.activity_installer)
+
         if (checkCallingOrSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 10)
         } else {
@@ -156,8 +156,7 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
     }
 
     private fun setupSwipeRefresh() {
-        mRefreshLayout = findViewById<SwipeRefreshLayout>(R.id.swipe_parent)
-        mRefreshLayout?.setColorSchemeResources(
+        refreshLayout.setColorSchemeResources(
             R.color.color_1,
             R.color.color_2,
             R.color.color_3,
@@ -171,35 +170,39 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
             R.color.color_b,
             R.color.color_c
         )
-        mRefreshLayout?.setOnRefreshListener(this)
+        refreshLayout.setOnRefreshListener(this)
     }
 
     private fun setSwitchChecksAndListeners() {
-        val patchRctd = mPrefs?.getBoolean("rctd", true)
-        val patchCcmd = mPrefs?.getBoolean("ccmd", false)
-        val patchTriton = mPrefs?.getBoolean("triton", true)
+        val patchRctd = prefs.getBoolean("rctd", true)
+        val patchCcmd = prefs.getBoolean("ccmd", false)
+        val patchTriton = prefs.getBoolean("triton", true)
 
-        rctd?.isChecked = patchRctd as Boolean
-        ccmd?.isChecked = patchCcmd as Boolean
-        triton?.isChecked = patchTriton as Boolean
+        rctd.isChecked = patchRctd
+        ccmd.isChecked = patchCcmd
+        triton.isChecked = patchTriton
 
-        rctd?.setOnCheckedChangeListener { _, b -> mPrefs?.edit()?.putBoolean("rctd", b)?.apply() }
+        rctd.setOnCheckedChangeListener { _, b ->
+            prefs.edit {
+                putBoolean("rctd", b)
+            }
+        }
 
-        ccmd?.setOnCheckedChangeListener { _, b -> mPrefs?.edit()?.putBoolean("ccmd", b)?.apply() }
+        ccmd?.setOnCheckedChangeListener { _, b ->
+            prefs.edit {
+                putBoolean("ccmd", b)
+            }
+        }
 
         triton?.setOnCheckedChangeListener { _, b ->
-            mPrefs?.edit()?.putBoolean("triton", b)?.apply()
+            prefs.edit {
+                putBoolean("triton", b)
+            }
         }
     }
 
     private fun setToMainScreen() {
         runOnUiThread {
-            setContentView(R.layout.activity_installer)
-
-            rctd = findViewById(R.id.enable_patch_rctd)
-            ccmd = findViewById(R.id.enable_patch_ccmd)
-            triton = findViewById(R.id.enable_patch_triton)
-
             setSwitchChecksAndListeners()
             setupSwipeRefresh()
 
@@ -215,7 +218,7 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
 
     @SuppressLint("CheckResult")
     private fun checkAikStatus() {
-        Observable.fromCallable({ checkAikStatusAsync() })
+        Observable.fromCallable { checkAikStatusAsync() }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { status ->
@@ -244,7 +247,6 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
     private fun checkAikStatusAsync(): Int {
         try {
             val aikProc = Runtime.getRuntime().exec("aik")
-
             val outputStream = DataOutputStream(aikProc.outputStream)
 
             outputStream.writeBytes("exit\n")
@@ -386,18 +388,6 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
 
         fragment.arguments = args
         fragment.show(supportFragmentManager, "progress", *commands)
-    }
-
-    private fun handleException(e: Exception) {
-        runOnUiThread {
-            setToMainScreen()
-
-            MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.failed)
-                .setMessage(Html.fromHtml(Arrays.toString(e.stackTrace).replace("\n", "<br>")))
-                .setPositiveButton(R.string.ok, null)
-                .show()
-        }
     }
 
     @Throws(IOException::class)
