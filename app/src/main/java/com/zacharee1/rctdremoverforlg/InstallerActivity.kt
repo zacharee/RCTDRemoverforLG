@@ -31,11 +31,11 @@ import java.util.*
 
 class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
     companion object {
-        val AIK_VERSION = 3.1F
+        const val AIK_VERSION = 3.1F
 
-        val NO_AIK = -1
-        val OLD_AIK = 1
-        val AIK = 0
+        const val NO_AIK = -1
+        const val OLD_AIK = 1
+        const val AIK = 0
     }
 
     private var rctd: SwitchViewWithText? = null
