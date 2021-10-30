@@ -2,10 +2,10 @@ package com.zacharee1.rctdremoverforlg.misc
 
 import android.content.Context
 import android.graphics.Color
-import android.support.v7.widget.AppCompatTextView
 import android.text.Html
 import android.text.TextUtils
 import android.util.AttributeSet
+import androidx.appcompat.widget.AppCompatTextView
 import com.zacharee1.rctdremoverforlg.R
 
 class TerminalView(context: Context, attrs: AttributeSet) : AppCompatTextView(context, attrs) {

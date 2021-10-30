@@ -6,10 +6,11 @@ import android.widget.CompoundButton
 import android.widget.LinearLayout
 import android.widget.Switch
 import android.widget.TextView
+import com.google.android.material.switchmaterial.SwitchMaterial
 import com.zacharee1.rctdremoverforlg.R
 
 class SwitchViewWithText(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
-    private val mSwitch: Switch?
+    private val mSwitch: SwitchMaterial?
     private val mSubText: TextView?
     private val mTitleText: TextView?
 

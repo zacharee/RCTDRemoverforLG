@@ -8,17 +8,19 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.*
-import android.preference.PreferenceManager
-import android.support.v4.widget.SwipeRefreshLayout
-import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatActivity
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.PreferenceManager
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.topjohnwu.superuser.Shell
+import com.topjohnwu.superuser.io.SuFile
+import com.topjohnwu.superuser.io.SuFileOutputStream
 import com.zacharee1.rctdremoverforlg.misc.ProgressFragment
-import com.zacharee1.rctdremoverforlg.misc.SuUtils
 import com.zacharee1.rctdremoverforlg.misc.SwitchViewWithText
 import com.zacharee1.rctdremoverforlg.misc.Utils
 import io.reactivex.Observable
@@ -51,20 +53,25 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
 
         mPrefs = PreferenceManager.getDefaultSharedPreferences(this)
 
-        Observable.fromCallable({SuUtils.testSudo()})
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { bool ->
-                    if (bool) {
-                        setup()
-                    } else {
-                        finish()
-                        Toast.makeText(this, resources.getText(R.string.need_root), Toast.LENGTH_SHORT).show()
-                    }
+        Observable.fromCallable { Shell.rootAccess() }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { bool ->
+                if (bool) {
+                    setup()
+                } else {
+                    finish()
+                    Toast.makeText(this, resources.getText(R.string.need_root), Toast.LENGTH_SHORT)
+                        .show()
                 }
+            }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         for (i in 0..permissions.lastIndex) {
             val permission = permissions[i]
             val result = grantResults[i]
@@ -75,13 +82,15 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
                 finish()
             }
         }
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     override fun onRefresh() {
         checkStatus()
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration?) {
+    override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
@@ -103,31 +112,36 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
 
         if (!(mRefreshLayout?.isRefreshing as Boolean)) mRefreshLayout?.isRefreshing = true
 
-        Observable.fromCallable({checkStatusAsync()})
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {bools ->
-                    rctd.setText(if (bools[0]) R.string.not_found else R.string.running)
-                    rctd.setTextColor(if (bools[0]) Color.GREEN else Color.RED)
+        Observable.fromCallable({ checkStatusAsync() })
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { bools ->
+                rctd.setText(if (bools[0]) R.string.not_found else R.string.running)
+                rctd.setTextColor(if (bools[0]) Color.GREEN else Color.RED)
 
-                    triton.setText(if (bools[1]) R.string.not_found else R.string.running)
-                    triton.setTextColor(if (bools[1]) Color.GREEN else Color.RED)
+                triton.setText(if (bools[1]) R.string.not_found else R.string.running)
+                triton.setTextColor(if (bools[1]) Color.GREEN else Color.RED)
 
-                    ccmd.setText(if (bools[2]) R.string.not_found else R.string.running)
-                    ccmd.setTextColor(if (bools[2]) Color.GREEN else Color.RED)
+                ccmd.setText(if (bools[2]) R.string.not_found else R.string.running)
+                ccmd.setTextColor(if (bools[2]) Color.GREEN else Color.RED)
 
-                    Handler(Looper.getMainLooper()).postDelayed({ mRefreshLayout?.isRefreshing = false }, 300)
-                }
+                Handler(Looper.getMainLooper()).postDelayed({
+                    mRefreshLayout?.isRefreshing = false
+                }, 300)
+            }
     }
 
     private fun checkStatusAsync(): BooleanArray {
-        val rctResult = SuUtils.sudoForResult("ps | grep rctd")
+        val rctResult = arrayListOf<String>()
+        val tritonResult = arrayListOf<String>()
+        val ccmdResult = arrayListOf<String>()
+
+        Shell.su("ps | grep rctd").to(rctResult).exec()
+        Shell.su("ps | grep triton").to(tritonResult).exec()
+        Shell.su("ps | grep ccmd").to(ccmdResult).exec()
+
         val rctNotThere = rctResult.isEmpty() || !rctResult.contains("/sbin/rctd")
-
-        val tritonResult = SuUtils.sudoForResult("ps | grep triton")
         val tritonNotThere = tritonResult.isEmpty() || !tritonResult.contains("/system/bin/triton")
-
-        val ccmdResult = SuUtils.sudoForResult("ps | grep ccmd")
         val ccmdNotThere = ccmdResult.isEmpty() || !ccmdResult.contains("/system/bin/ccmd")
 
         return booleanArrayOf(rctNotThere, tritonNotThere, ccmdNotThere)
@@ -142,20 +156,20 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
     }
 
     private fun setupSwipeRefresh() {
-        mRefreshLayout = findViewById(R.id.swipe_parent)
+        mRefreshLayout = findViewById<SwipeRefreshLayout>(R.id.swipe_parent)
         mRefreshLayout?.setColorSchemeResources(
-                R.color.color_1,
-                R.color.color_2,
-                R.color.color_3,
-                R.color.color_4,
-                R.color.color_5,
-                R.color.color_6,
-                R.color.color_7,
-                R.color.color_8,
-                R.color.color_9,
-                R.color.color_a,
-                R.color.color_b,
-                R.color.color_c
+            R.color.color_1,
+            R.color.color_2,
+            R.color.color_3,
+            R.color.color_4,
+            R.color.color_5,
+            R.color.color_6,
+            R.color.color_7,
+            R.color.color_8,
+            R.color.color_9,
+            R.color.color_a,
+            R.color.color_b,
+            R.color.color_c
         )
         mRefreshLayout?.setOnRefreshListener(this)
     }
@@ -171,9 +185,11 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
 
         rctd?.setOnCheckedChangeListener { _, b -> mPrefs?.edit()?.putBoolean("rctd", b)?.apply() }
 
-        ccmd?.setOnCheckedChangeListener{ _, b -> mPrefs?.edit()?.putBoolean("ccmd", b)?.apply() }
+        ccmd?.setOnCheckedChangeListener { _, b -> mPrefs?.edit()?.putBoolean("ccmd", b)?.apply() }
 
-        triton?.setOnCheckedChangeListener{ _, b -> mPrefs?.edit()?.putBoolean("triton", b)?.apply() }
+        triton?.setOnCheckedChangeListener { _, b ->
+            mPrefs?.edit()?.putBoolean("triton", b)?.apply()
+        }
     }
 
     private fun setToMainScreen() {
@@ -199,29 +215,30 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
 
     @SuppressLint("CheckResult")
     private fun checkAikStatus() {
-        Observable.fromCallable({checkAikStatusAsync()})
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { status ->
-                    when (status) {
-                        NO_AIK -> {
-                            (findViewById<View>(R.id.textView) as TextView).text = resources.getString(R.string.installing_aik)
-                            installAik()
-                        }
-                        AIK -> {
-                            setToMainScreen()
-                        }
-                        OLD_AIK -> {
-                            AlertDialog.Builder(this)
-                                    .setTitle(R.string.old_aik)
-                                    .setMessage(R.string.old_aik_msg)
-                                    .setPositiveButton(R.string.yes) { _, _ -> installAik() }
-                                    .setNegativeButton(R.string.no) { _, _ -> setToMainScreen() }
-                                    .setCancelable(false)
-                                    .show()
-                        }
+        Observable.fromCallable({ checkAikStatusAsync() })
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { status ->
+                when (status) {
+                    NO_AIK -> {
+                        (findViewById<View>(R.id.textView) as TextView).text =
+                            resources.getString(R.string.installing_aik)
+                        installAik()
+                    }
+                    AIK -> {
+                        setToMainScreen()
+                    }
+                    OLD_AIK -> {
+                        MaterialAlertDialogBuilder(this)
+                            .setTitle(R.string.old_aik)
+                            .setMessage(R.string.old_aik_msg)
+                            .setPositiveButton(R.string.yes) { _, _ -> installAik() }
+                            .setNegativeButton(R.string.no) { _, _ -> setToMainScreen() }
+                            .setCancelable(false)
+                            .show()
                     }
                 }
+            }
     }
 
     private fun checkAikStatusAsync(): Int {
@@ -244,70 +261,50 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
 
     @SuppressLint("CheckResult")
     private fun installAik() {
-        Observable.fromCallable({installAikAsync()})
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { bool ->
-                    if (bool) {
-                        AlertDialog.Builder(this)
-                                .setTitle(resources.getString(R.string.reboot))
-                                .setMessage(resources.getString(R.string.install_aik))
-                                .setPositiveButton(resources.getString(R.string.yes)) { _, _ ->
-                                    try {
-                                        SuUtils.sudo("reboot recovery")
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    }
-                                }
-                                .setNegativeButton(resources.getString(R.string.no)) { _, _ -> finish() }
-                                .setCancelable(false)
-                                .show()
-                    } else {
-                        AlertDialog.Builder(this)
-                                .setTitle(R.string.failed)
-                                .setMessage(R.string.aik_install_fail)
-                                .setPositiveButton(R.string.ok) { _, _ -> finish() }
-                                .show()
-                    }
+        Observable.fromCallable { installAikAsync() }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { bool ->
+                if (bool) {
+                    MaterialAlertDialogBuilder(this)
+                        .setTitle(resources.getString(R.string.reboot))
+                        .setMessage(resources.getString(R.string.install_aik))
+                        .setPositiveButton(resources.getString(R.string.yes)) { _, _ ->
+                            try {
+                                Shell.su("reboot recovery").exec()
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                        .setNegativeButton(resources.getString(R.string.no)) { _, _ -> finish() }
+                        .setCancelable(false)
+                        .show()
+                } else {
+                    MaterialAlertDialogBuilder(this)
+                        .setTitle(R.string.failed)
+                        .setMessage(R.string.aik_install_fail)
+                        .setPositiveButton(R.string.ok) { _, _ -> finish() }
+                        .show()
                 }
+            }
     }
 
     private fun installAikAsync(): Boolean {
-        val assetManager = assets
         val aik = "AIK.zip"
 
-        val `in`: InputStream
-        val out: FileOutputStream
+        val outDir = SuFile(Environment.getExternalStorageDirectory().absolutePath, "AndroidImageKitchen")
+        createDir(outDir)
+        val outFile = SuFile(outDir, aik)
 
-        try {
-            `in` = assetManager.open(aik)
-            val dest = Environment.getExternalStorageDirectory().absolutePath + "/AndroidImageKitchen/"
-            val outDir = File(dest)
-            createDir(outDir)
-            val outFile = File(dest, aik)
-            out = FileOutputStream(outFile)
-
-            copyFile(`in`, out)
-
-            `in`.close()
-
-            out.flush()
-            out.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return false
+        assets.open(aik).use { input ->
+            SuFileOutputStream.open(outFile, false).use { output ->
+                input.copyTo(output)
+            }
         }
 
+        val result = Shell.su("echo '--update_package=/sdcard/0/AndroidImageKitchen/AIK.zip' >> /cache/recovery/command").exec()
 
-        try {
-            SuUtils.sudo("echo '--update_package=/sdcard/0/AndroidImageKitchen/AIK.zip' >> /cache/recovery/command")
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-            return false
-        }
-
-
-        return true
+        return result.isSuccess
     }
 
     fun handlePatch(v: View) {
@@ -317,84 +314,66 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
 
         val executeMod = "executemod.sh"
 
-        val assetManager = assets
+        val outDir = SuFile(Environment.getExternalStorageDirectory().absolutePath, "AndroidImageKitchen")
+        val outFile = SuFile(outDir, executeMod)
 
-        val `in`: InputStream
-        val out: FileOutputStream
-
-        try {
-            `in` = assetManager.open(executeMod)
-            val dest = Environment.getExternalStorageDirectory().absolutePath + "/AndroidImageKitchen/"
-            val outDir = File(dest)
-            createDir(outDir)
-            val outFile = File(dest, executeMod)
-            out = FileOutputStream(outFile)
-
-            copyFile(`in`, out)
-
-            `in`.close()
-
-            out.flush()
-            out.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
-
-            handleException(e)
+        assets.open(executeMod).use { input ->
+            SuFileOutputStream.open(outFile, false).use { output ->
+                input.copyTo(output)
+            }
         }
 
-
         showExecuteDialog(
-                R.string.flash,
-                R.string.cancel,
-                R.string.patching_image,
-                Runnable { handleFlash(v) },
-                Runnable { handlePatch(v) },
-                "cp /sdcard/AndroidImageKitchen/$executeMod /data/local/AIK-mobile/. || exit 1",
-                "cd /data/local/AIK-mobile/ || exit 1",
-                "chmod 0755 $executeMod || exit 1",
-                "./" + executeMod + " " + patchRctd + " " + patchCcmd + " " + patchTriton + " " + Build.DEVICE
+            R.string.flash,
+            R.string.cancel,
+            R.string.patching_image,
+            { handleFlash(v) },
+            { handlePatch(v) },
+            "cp /sdcard/AndroidImageKitchen/$executeMod /data/local/AIK-mobile/. || exit 1",
+            "cd /data/local/AIK-mobile/ || exit 1",
+            "chmod 0755 $executeMod || exit 1",
+            "./" + executeMod + " " + patchRctd + " " + patchCcmd + " " + patchTriton + " " + Build.DEVICE
         )
     }
 
     fun handleFlash(v: View) {
         showExecuteDialog(
-                R.string.reboot,
-                R.string.cancel,
-                R.string.flashing_image,
-                Runnable {
-                    try {
-                        SuUtils.sudo("reboot")
-                    } catch (e: Exception) {
-                    }
-                },
-                Runnable { handleFlash(v) },
-                "dd if=/storage/emulated/0/AndroidImageKitchen/boot.img of=/dev/block/bootdevice/by-name/boot || exit 1",
-                "echo Done!"
+            R.string.reboot,
+            R.string.cancel,
+            R.string.flashing_image,
+            {
+                try {
+                    Shell.su("reboot").exec()
+                } catch (e: Exception) {}
+            },
+            { handleFlash(v) },
+            "dd if=/storage/emulated/0/AndroidImageKitchen/boot.img of=/dev/block/bootdevice/by-name/boot || exit 1",
+            "echo Done!"
         )
     }
 
     fun handleBackup(v: View) {
         showExecuteDialog(
-                R.string.done,
-                R.string.cancel,
-                R.string.backing_up,
-                null,
-                Runnable { handleBackup(v) },
-                "mkdir /sdcard/AndroidImageKitchen/Backups/",
-                "dd if=/dev/block/bootdevice/by-name/boot of=/sdcard/AndroidImageKitchen/Backups/" +
-                        Date().toString().replace(" ", "_") +
-                        ".img || exit 1",
-                "echo Done!"
+            R.string.done,
+            R.string.cancel,
+            R.string.backing_up,
+            null,
+            { handleBackup(v) },
+            "mkdir /sdcard/AndroidImageKitchen/Backups/",
+            "dd if=/dev/block/bootdevice/by-name/boot of=/sdcard/AndroidImageKitchen/Backups/" +
+                    Date().toString().replace(" ", "_") +
+                    ".img || exit 1",
+            "echo Done!"
         )
     }
 
     private fun showExecuteDialog(
-            positiveRes: Int,
-            negativeRes: Int,
-            titleRes: Int,
-            positiveHandler: Runnable?,
-            failHandler: Runnable?,
-            vararg commands: String
+        positiveRes: Int,
+        negativeRes: Int,
+        titleRes: Int,
+        positiveHandler: Runnable?,
+        failHandler: Runnable?,
+        vararg commands: String
     ) {
         val fragment = ProgressFragment()
         fragment.setPositiveRunnable(positiveHandler)
@@ -413,11 +392,11 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
         runOnUiThread {
             setToMainScreen()
 
-            AlertDialog.Builder(this)
-                    .setTitle(R.string.failed)
-                    .setMessage(Html.fromHtml(Arrays.toString(e.stackTrace).replace("\n", "<br>")))
-                    .setPositiveButton(R.string.ok, null)
-                    .show()
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.failed)
+                .setMessage(Html.fromHtml(Arrays.toString(e.stackTrace).replace("\n", "<br>")))
+                .setPositiveButton(R.string.ok, null)
+                .show()
         }
     }
 
@@ -433,19 +412,5 @@ class InstallerActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListe
                 throw IOException("Unable to create directory")
             }
         }
-    }
-
-    @Throws(IOException::class)
-    private fun copyFile(`in`: InputStream, out: OutputStream) {
-        val buffer = ByteArray(1024)
-        var read: Int
-
-        do {
-            read = `in`.read(buffer)
-
-            if (read == -1) break
-
-            out.write(buffer, 0, read)
-        } while (true)
     }
 }

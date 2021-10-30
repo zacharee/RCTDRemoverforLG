@@ -2,6 +2,8 @@ package com.zacharee1.rctdremoverforlg.misc
 
 import android.content.Context
 import android.util.TypedValue
+import com.topjohnwu.superuser.io.SuFile
+import com.topjohnwu.superuser.io.SuFileInputStream
 import java.io.*
 
 class Utils {
@@ -11,30 +13,19 @@ class Utils {
         }
 
         fun getAikVersion(): Float {
-            val file = File("/data/local/AIK-mobile/bin/", "module.prop")
+            val file = SuFile("/data/local/AIK-mobile/bin/", "module.prop")
 
             val text = StringBuilder()
 
-            try {
-                val br = BufferedReader(FileReader(file))
-                var line: String?
-
-                do {
-                    line = br.readLine()
-
-                    if (line == null) break
-
-                    if (line.contains("version=")) {
-                        text.append(line)
-                    }
-                } while (true)
-
-                br.close()
-            } catch (e: IOException) {}
+            SuFileInputStream.open(file).bufferedReader().useLines { line ->
+                if (line.contains("version=")) {
+                    text.append(line)
+                }
+            }
 
             val version = text.toString().replace("version=", "")
 
-            return java.lang.Float.valueOf(version)!!
+            return version.toFloat()
         }
     }
 }

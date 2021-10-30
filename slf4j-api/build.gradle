@@ -1,2 +1,0 @@
-configurations.maybeCreate("default")
-artifacts.add("default", file('slf4j-api-1.7.25.jar'))

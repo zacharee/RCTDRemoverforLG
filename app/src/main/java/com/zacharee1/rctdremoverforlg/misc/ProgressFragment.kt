@@ -7,51 +7,49 @@ import android.content.DialogInterface
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.support.v4.app.DialogFragment
-import android.support.v4.app.FragmentManager
-import android.support.v7.app.AlertDialog
-import android.support.v7.widget.ButtonBarLayout
 import android.view.LayoutInflater
-import android.view.View
+import android.widget.ScrollView
+import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.ButtonBarLayout
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.topjohnwu.superuser.CallbackList
+import com.topjohnwu.superuser.Shell
 import com.zacharee1.rctdremoverforlg.R
 import fr.castorflex.android.circularprogressbar.CircularProgressBar
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
-import org.zeroturnaround.exec.ProcessExecutor
-import org.zeroturnaround.exec.ProcessResult
-import org.zeroturnaround.exec.listener.ProcessListener
 import java.util.*
+import java.util.concurrent.Executors
 
 class ProgressFragment : DialogFragment() {
-    private var mPositiveRunnable: Runnable? = null
-    private var mFailRunnable: Runnable? = null
+    private var positiveRunnable: Runnable? = null
+    private var failRunnable: Runnable? = null
 
-    private val mExecutor = ProcessExecutor()
+    private val executor = Executors.newSingleThreadExecutor()
 
-    private var mTitleRes: Int? = 0
-    private var mPositiveRes: Int? = 0
-    private var mNegativeRes: Int? = 0
+    private var titleRes: Int? = 0
+    private var positiveRes: Int? = 0
+    private var negativeRes: Int? = 0
 
-    private var mCommands = ArrayList<String>()
-
-    private var mListener: OnOperationFinishListener? = null
+    private var commands = ArrayList<String>()
+    private var listener: OnOperationFinishListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        mTitleRes = arguments?.getInt("title")
-        mPositiveRes = arguments?.getInt("positive")
-        mNegativeRes = arguments?.getInt("negative")
+        titleRes = arguments?.getInt("title")
+        positiveRes = arguments?.getInt("positive")
+        negativeRes = arguments?.getInt("negative")
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         isCancelable = false
-        return AlertDialog.Builder(context as Context)
+        return MaterialAlertDialogBuilder(context as Context)
                 .setView(R.layout.terminal_output_layout)
-                .setTitle(mTitleRes as Int)
+                .setTitle(titleRes as Int)
                 .setPositiveButton(R.string.working, null)
-                .setNegativeButton(mNegativeRes as Int) { _, _ -> mExecutor.stop() }
+                .setNegativeButton(negativeRes as Int) { _, _ -> executor.shutdownNow() }
                 .setCancelable(false)
                 .create()
     }
@@ -73,55 +71,59 @@ class ProgressFragment : DialogFragment() {
     fun show(manager: FragmentManager, tag: String, vararg commands: String) {
         show(manager, tag)
 
-        mCommands = ArrayList(Arrays.asList(*commands))
+        this.commands = ArrayList(listOf(*commands))
     }
 
     fun setPositiveRunnable(runnable: Runnable?) {
-        mPositiveRunnable = runnable
+        positiveRunnable = runnable
     }
 
     fun setFailRunnable(runnable: Runnable?) {
-        mFailRunnable = runnable
+        failRunnable = runnable
     }
 
     fun setFinishCallback(listener: OnOperationFinishListener?) {
-        mListener = listener
+        this.listener = listener
     }
 
     @SuppressLint("CheckResult")
     fun executeCommands() {
-        Observable.fromCallable({
-                SuUtils.suAndPrintToView(
-                mExecutor,
-                activity,
-                dialog.findViewById<View>(R.id.terminal_view) as TerminalView,
-                mCommands
-            )})
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { result ->
+        val outputView = dialog!!.findViewById<TextView>(R.id.terminal_view)
+        val scroller = dialog!!.findViewById<ScrollView>(R.id.scroller)
+
+        val callbackList = object : CallbackList<String>() {
+            override fun onAddElement(e: String) {
+                outputView.append("$e\n")
+
+                scroller.post { scroller.fullScroll(ScrollView.FOCUS_DOWN) }
+            }
+        }
+
+        Shell.su(*commands.toTypedArray())
+            .to(callbackList)
+            .submit(executor) { result ->
                 val positive = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_POSITIVE)
                 positive.isEnabled = true
 
                 (positive.parent as ButtonBarLayout).removeView((positive.parent as ButtonBarLayout).findViewById(R.id.loader))
 
-                if (result?.exitValue == 0) {
-                    positive.setText(mPositiveRes as Int)
+                if (result.isSuccess) {
+                    positive.setText(positiveRes as Int)
                     positive.setOnClickListener {
-                        if (mPositiveRunnable != null) Handler(Looper.getMainLooper()).post(mPositiveRunnable)
+                        if (positiveRunnable != null) Handler(Looper.getMainLooper()).post(positiveRunnable)
                         dismiss()
                     }
-                    dialog.setTitle(R.string.done)
+                    dialog!!.setTitle(R.string.done)
                 } else {
                     positive.setText(R.string.retry)
                     positive.setOnClickListener {
                         dismiss()
-                        if (mFailRunnable != null) Handler(Looper.getMainLooper()).post(mFailRunnable)
+                        if (failRunnable != null) Handler(Looper.getMainLooper()).post(failRunnable)
                     }
-                    dialog.setTitle(R.string.failed)
+                    dialog!!.setTitle(R.string.failed)
                 }
 
-                mListener?.onOperationFinish()
+                listener?.onOperationFinish()
             }
     }
 

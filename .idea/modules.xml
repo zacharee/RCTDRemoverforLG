@@ -2,11 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/RCTDRemoverforLG.iml" filepath="$PROJECT_DIR$/RCTDRemoverforLG.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/commons-io/commons-io.iml" filepath="$PROJECT_DIR$/commons-io/commons-io.iml" />
-      <module fileurl="file://$PROJECT_DIR$/slf4j-android/slf4j-android.iml" filepath="$PROJECT_DIR$/slf4j-android/slf4j-android.iml" />
-      <module fileurl="file://$PROJECT_DIR$/slf4j-api/slf4j-api.iml" filepath="$PROJECT_DIR$/slf4j-api/slf4j-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/RCTDRemoverforLG.iml" filepath="$PROJECT_DIR$/.idea/modules/RCTDRemoverforLG.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/RCTDRemoverforLG.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/RCTDRemoverforLG.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/RCTDRemoverforLG.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/RCTDRemoverforLG.app.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/RCTDRemoverforLG.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/RCTDRemoverforLG.app.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/RCTDRemoverforLG.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/RCTDRemoverforLG.app.unitTest.iml" />
     </modules>
   </component>
 </project>
